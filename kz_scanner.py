@@ -44,6 +44,7 @@ import sys
 import time
 from pathlib import Path
 from urllib.parse import urlparse, urljoin
+from urllib.request import urlopen
 
 # ─── PLATFORM DETECTION ──────────────────────────────────────────────────────
 
@@ -65,6 +66,38 @@ def detect_platform(url: str):
     return 'gen', 'Generic'
 
 
+def resolve_cdp_endpoint(cdp_url: str) -> str:
+    """Return Chrome's WebSocket debugger URL when an HTTP CDP endpoint is supplied."""
+    parsed = urlparse(cdp_url)
+    if parsed.scheme in ('ws', 'wss'):
+        return cdp_url
+
+    base = cdp_url.rstrip('/')
+    version_url = f'{base}/json/version'
+    try:
+        with urlopen(version_url, timeout=5) as response:
+            payload = json.loads(response.read().decode('utf-8'))
+    except Exception as e:
+        raise RuntimeError(f'CDP endpoint is not responding at {version_url}: {e}') from e
+
+    ws_url = payload.get('webSocketDebuggerUrl')
+    if not ws_url:
+        raise RuntimeError(f'CDP endpoint responded, but did not include webSocketDebuggerUrl at {version_url}')
+
+    browser_name = payload.get('Browser')
+    if browser_name:
+        print(f"  -> CDP browser endpoint: {browser_name}")
+    return ws_url
+
+
+def cdp_http_base(cdp_url: str) -> str:
+    parsed = urlparse(cdp_url)
+    if parsed.scheme in ('ws', 'wss'):
+        scheme = 'https' if parsed.scheme == 'wss' else 'http'
+        return f'{scheme}://{parsed.netloc}'
+    return cdp_url.rstrip('/')
+
+
 MEDIA_EXTS = re.compile(
     r'\.(mp4|webm|m4v|mov|avi|mkv|mp3|m4a|ogg|flac|wav)(\?[^"\']*)?$', re.I
 )
@@ -80,37 +113,57 @@ def extract_linkedin(page, url: str) -> list[dict]:
     """
     found = {}  # url -> item dict
 
-    def clean_li_url(href: str) -> str:
-        m = re.search(r'(https://www\.linkedin\.com/feed/update/[^/?#]+)', href)
-        return m.group(1) if m else href.split('?')[0]
+    def push_linkedin(raw: str, source: str):
+        if not raw:
+            return
+        raw = raw.strip()
+        if raw.startswith('/'):
+            raw = 'https://www.linkedin.com' + raw
+        raw = raw.replace('%3A', ':')
+
+        activity = re.search(r'urn:li:activity:\d+', raw)
+        if activity:
+            clean = f'https://www.linkedin.com/feed/update/{activity.group(0)}/'
+        else:
+            m = re.search(r'(https://(?:www\.)?linkedin\.com/(?:feed/update/[^/?#]+|posts/[^/?#]+))', raw)
+            if not m:
+                return
+            clean = m.group(1).replace('https://linkedin.com/', 'https://www.linkedin.com/')
+
+        if clean not in found:
+            found[clean] = {
+                'type': 'PLATFORM',
+                'url': clean,
+                'dot': 'li',
+                'platform': 'LinkedIn',
+                'source': source,
+            }
 
     def harvest():
-        # Feed update containers
-        posts = page.locator('div.feed-shared-update-v2').all()
-        for post in posts:
+        selectors = [
+            "a[href*='/feed/update/']",
+            "a[href*='/posts/']",
+            "a[href*='urn:li:activity']",
+            "[data-urn*='urn:li:activity']",
+            "[data-id*='urn:li:activity']",
+            "[id*='urn:li:activity']",
+        ]
+        for sel in selectors:
             try:
-                has_video = post.locator('video').count() > 0
-                has_li_video = post.locator('[data-urn*="video"]').count() > 0
-                if not (has_video or has_li_video):
-                    # Also accept posts with a "See video" link pattern
-                    all_links = post.locator("a[href*='/feed/update/']").all()
-                    if not all_links:
-                        continue
-                links = post.locator("a[href*='/feed/update/']").all()
-                for link in links:
-                    href = link.get_attribute('href')
-                    if href:
-                        clean = clean_li_url(href)
-                        if clean not in found:
-                            found[clean] = {
-                                'type': 'PLATFORM',
-                                'url': clean,
-                                'dot': 'li',
-                                'platform': 'LinkedIn',
-                                'source': 'linkedin_feed_scroll',
-                            }
+                for el in page.locator(sel).all():
+                    for attr in ('href', 'data-urn', 'data-id', 'id'):
+                        push_linkedin(el.get_attribute(attr) or '', f'linkedin_{attr}')
             except Exception:
                 pass
+
+        try:
+            html = page.content()
+            for match in re.finditer(r'urn:li:activity:\d+', html):
+                push_linkedin(match.group(0), 'linkedin_html_activity')
+                if len(found) > 500:
+                    break
+        except Exception:
+            pass
 
     return harvest, found
 
@@ -266,12 +319,14 @@ EXTRACTORS = {
 # ─── SCROLL LOOP ─────────────────────────────────────────────────────────────
 
 def scroll_and_collect(page, harvest_fn, found: dict, scrolls: int, delay: float, label: str):
+    scroll_px = 900 if label.lower().startswith('linkedin') else 2500
     for i in range(scrolls):
         harvest_fn()
         count = len(found)
         print(f"  Scroll {i+1:>3}/{scrolls}  |  {label} found: {count}", end='\r', flush=True)
-        page.mouse.wheel(0, 2500)
+        page.mouse.wheel(0, scroll_px)
         time.sleep(delay)
+        harvest_fn()
         # Check for "no more content" signals
         if i > 5:
             try:
@@ -297,6 +352,7 @@ def run_scan(
     profile_dir: str = 'kz_browser_profile',
     force_platform: str | None = None,
     headless: bool = False,
+    cdp_url: str | None = None,
 ) -> list[dict]:
     from playwright.sync_api import sync_playwright
 
@@ -306,45 +362,111 @@ def run_scan(
     print(f"  KZ Scanner — {label} ({dot})")
     print(f"  URL     : {url}")
     print(f"  Scrolls : {scrolls}  |  Delay: {delay}s")
-    print(f"  Profile : {profile_dir}/")
+    if cdp_url:
+        print(f"  Mode    : Reuse existing Chrome via CDP ({cdp_url})")
+    else:
+        print(f"  Profile : {profile_dir}/")
     print(f"  Output  : {out_file}")
     print(f"{'─'*60}\n")
 
     with sync_playwright() as p:
-        browser = p.chromium.launch_persistent_context(
-            user_data_dir=profile_dir,
-            headless=headless,
-            viewport={'width': 1366, 'height': 900},
-            args=['--disable-blink-features=AutomationControlled'],
-        )
-        page = browser.new_page()
 
-        print(f"  → Opening page…")
-        try:
-            page.goto(url, wait_until='domcontentloaded', timeout=60_000)
-        except Exception as e:
-            print(f"  ⚠ Page load error: {e}")
-            print("  Continuing anyway (page may be partially loaded)…")
+        if cdp_url:
+            # ── CDP MODE: connect to already-running Chrome ──────────────
+            print(f"  -> Checking Chrome CDP endpoint {cdp_url} ...")
+            try:
+                cdp_endpoint = resolve_cdp_endpoint(cdp_url)
+                print(f"  -> Connecting to existing Chrome ...")
+                endpoints = []
+                for endpoint in (cdp_endpoint, cdp_url, cdp_http_base(cdp_url)):
+                    if endpoint and endpoint not in endpoints:
+                        endpoints.append(endpoint)
+                last_error = None
+                for endpoint in endpoints:
+                    try:
+                        browser = p.chromium.connect_over_cdp(endpoint)
+                        break
+                    except Exception as e:
+                        last_error = e
+                else:
+                    raise last_error
+            except Exception as e:
+                print(f"\n  [!] Could not connect to Chrome: {e}")
+                print( "  Make sure Chrome is running with --remote-debugging-port=9222")
+                print( "  and a separate --user-data-dir for debugging.")
+                print( "  The launcher should have done this automatically.")
+                print( "  Try closing and reopening Chrome via the launcher.\n")
+                sys.exit(1)
 
-        if not headless:
+            # Reuse the first existing context (keeps all your logins/cookies)
+            if browser.contexts:
+                context = browser.contexts[0]
+            else:
+                context = browser.new_context()
+
+            # Open a NEW tab inside the existing Chrome window
+            page = context.new_page()
+            print(f"  -> Opened new tab in your existing Chrome window")
+            print(f"  -> Navigating to URL...")
+            try:
+                page.goto(url, wait_until='domcontentloaded', timeout=60_000)
+            except Exception as e:
+                print(f"  [!] Page load error: {e}")
+                print("  Continuing anyway...")
+
             input(
-                "\n  ┌─────────────────────────────────────────────────────┐\n"
-                "  │  Log in if needed, navigate to the target page,     │\n"
-                "  │  then press ENTER here to begin scanning…           │\n"
-                "  └─────────────────────────────────────────────────────┘\n> "
+                "\n  Navigate to the exact page you want to scan\n"
+                "  (log in if needed), then press ENTER here to begin...\n> "
             )
+            time.sleep(2)
 
-        # Wait briefly for JS to settle after user interaction
-        time.sleep(2)
+            extractor_fn = EXTRACTORS.get(dot, extract_generic)
+            harvest_fn, found = extractor_fn(page, url)
 
-        # Pick extractor
-        extractor_fn = EXTRACTORS.get(dot, extract_generic)
-        harvest_fn, found = extractor_fn(page, url)
+            print(f"\n  Starting scroll scan ({scrolls} scrolls)...")
+            scroll_and_collect(page, harvest_fn, found, scrolls, delay, label)
 
-        print(f"\n  Starting scroll scan ({scrolls} scrolls)…")
-        scroll_and_collect(page, harvest_fn, found, scrolls, delay, label)
+            # Close only the tab we opened, not the whole browser
+            page.close()
 
-        browser.close()
+        else:
+            # ── NORMAL MODE: launch a fresh Playwright-managed browser ───
+            launch_kwargs = {
+                'user_data_dir': profile_dir,
+                'headless': headless,
+                'viewport': {'width': 1366, 'height': 900},
+                'args': ['--disable-blink-features=AutomationControlled'],
+            }
+            try:
+                browser = p.chromium.launch_persistent_context(channel='chrome', **launch_kwargs)
+            except Exception:
+                browser = p.chromium.launch_persistent_context(**launch_kwargs)
+
+            pages = browser.pages
+            page = pages[0] if pages else browser.new_page()
+
+            print(f"  -> Opening page...")
+            try:
+                page.goto(url, wait_until='domcontentloaded', timeout=15_000)
+            except Exception as e:
+                print(f"  [!] Page load error: {e}")
+                print("  Continuing anyway...")
+
+            if not headless:
+                input(
+                    "\n  Log in if needed, navigate to the target page,\n"
+                    "  then press ENTER here to begin scanning...\n> "
+                )
+
+            time.sleep(2)
+
+            extractor_fn = EXTRACTORS.get(dot, extract_generic)
+            harvest_fn, found = extractor_fn(page, url)
+
+            print(f"\n  Starting scroll scan ({scrolls} scrolls)...")
+            scroll_and_collect(page, harvest_fn, found, scrolls, delay, label)
+
+            browser.close()
 
     items = list(found.values())
     print(f"\n  ✓ Scan complete — {len(items)} items found")
@@ -436,6 +558,7 @@ def main():
     parser.add_argument('--headless',  action='store_true',                        help='Headless mode (no browser window)')
     parser.add_argument('--serve',     action='store_true',                        help='Start local HTTP bridge after scan')
     parser.add_argument('--port',      type=int,   default=7474,                  help='HTTP bridge port (default: 7474)')
+    parser.add_argument('--cdp',       type=str,   default=None,  metavar='URL',  help='Connect to existing Chrome via CDP (e.g. http://127.0.0.1:9222)')
     args = parser.parse_args()
 
     try:
@@ -447,6 +570,7 @@ def main():
             profile_dir=args.profile,
             force_platform=args.platform,
             headless=args.headless,
+            cdp_url=args.cdp,
         )
     except KeyboardInterrupt:
         print('\n\n  Scan interrupted by user.')

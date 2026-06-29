@@ -6,7 +6,7 @@ A browser-based GUI for generating [yt-dlp](https://github.com/yt-dlp/yt-dlp) co
 
 Project created and maintained by **Jaswant Kanojia**.
 
-**Version:** v2.7 · **Date:** 28-06-2026
+**Version:** v3.6 · **Date:** 29-06-2026
 
 ---
 
@@ -19,7 +19,8 @@ Open the app at [kzdownloader.pages.dev](https://kzdownloader.pages.dev/). Paste
 | **Profiles** | Add any social profile or video URL. Platform detected automatically. Generated command appears inline — no tab switch needed. |
 | **History** | Searchable log of every URL queued and every command generated. Export, import, and re-queue entries. |
 | **Presets** | Manage saved channel shortcuts. Add, edit, delete, export, and import presets. Seeded with built-in Tata presets on first load. |
-| **Options** | Format/quality, output folder, save location mode, filename template, date filter, extra flags. |
+| **Scanner** | Scan any page for media. Quick Scan uses a CORS proxy for public pages; Playwright mode runs a local Python script for login-gated pages (LinkedIn, Instagram, Facebook); Live Bridge imports results directly from a running scanner over HTTP. |
+| **Settings** | Format/quality, output folder, save location mode, filename template, date filter, extra flags. |
 | **Setup Guide** | Step-by-step install instructions for Python, FFmpeg, and yt-dlp on Windows, macOS, Linux, Android (Termux), and iOS. |
 
 ---
@@ -31,8 +32,9 @@ Open the app at [kzdownloader.pages.dev](https://kzdownloader.pages.dev/). Paste
 | YouTube | ✅ | ✅ | Full channel scrape supported |
 | Instagram | ✅ | ✅ | May require cookies for private accounts |
 | Facebook | ✅ | ✅ | Public pages only without cookies |
-| LinkedIn | ✅ | ✅ | Requires cookies from a logged-in Chrome session |
+| LinkedIn | ✅ | ✅ | Requires cookies or Playwright scanner with saved login |
 | Twitter / X | ✅ | ✅ | Rate limits apply |
+| TikTok | — | ✅ | Single video via yt-dlp |
 | Generic URLs | — | ✅ | Any site yt-dlp supports |
 
 ---
@@ -161,14 +163,43 @@ yt-dlp cannot run natively on iOS. Recommended options:
 
 ### 2. Open the app
 
-Go to [kzdownloader.pages.dev](https://kzdownloader.pages.dev/) **or** open `KZ-Downloader.html` locally in Chrome, Firefox, or Edge.
+Go to [kzdownloader.pages.dev](https://kzdownloader.pages.dev/) in Chrome, Firefox, or Edge.
 
 ### 3. Generate commands
 
 1. **Profiles** → paste a URL or click a preset → **+ Add**
-2. **Options** → set format, output folder, save location mode, filename template, flags
+2. **Settings** → set format, output folder, save location mode, filename template, flags
 3. The generated command appears inline in the **Profiles** tab — copy it, download the `.bat`, or click **Launch in CMD**
 4. **History** → find any past URL or command, re-queue or export it
+
+---
+
+## Playwright Scanner
+
+For login-gated pages (LinkedIn, Instagram, Facebook) the built-in proxy scanner cannot access authenticated content. Use the **Scanner → Playwright** tab instead.
+
+### Prerequisites (one-time)
+
+```cmd
+pip install playwright
+playwright install chromium
+```
+
+Download `kz_scanner.py` from the Scanner tab and save it anywhere on your machine.
+
+### Running a scan
+
+1. Open the **Scanner → Playwright** tab
+2. Paste the target URL — the platform is auto-detected
+3. Set your output folder, KZ Downloader folder path, and scroll count
+4. Copy the generated command and run it in any CMD window
+5. When the scan finishes, drag the output JSON into the import zone
+
+**Output files** are named automatically: `platform-dd-mm-yy-hh-mm.json` (e.g. `linkedin-29-06-26-14-03.json`).
+
+**KZ Downloader folder** — fill this in once and the generated command will include `cd /d "path"` so it runs from any CMD window regardless of where it is opened.
+
+Alternatively, use **Live Bridge** mode: run `kz_scanner.py --serve` and the app polls the local HTTP server directly — no file step needed.
 
 ---
 
@@ -190,7 +221,7 @@ The selected device is auto-detected from your browser on first load and saved t
 
 ## Save Location Mode
 
-In **Options**, a toggle below the output folder field controls how the save path is handled:
+In **Settings**, a toggle below the output folder field controls how the save path is handled:
 
 | Mode | Behaviour |
 |---|---|
@@ -201,11 +232,17 @@ In **Options**, a toggle below the output folder field controls how the save pat
 
 ## LinkedIn
 
-LinkedIn requires an authenticated browser session. Before running LinkedIn commands:
+LinkedIn requires an authenticated browser session. Two options:
 
+**Option A — Cookies (Quick Scan / yt-dlp):**
 1. Log in to LinkedIn in **Google Chrome**
-2. Enable **Cookies from Chrome** in the Options → Extra flags section
+2. Enable **Cookies from Chrome** in Settings → Extra flags
 3. Run the generated command immediately after — cookies expire quickly
+
+**Option B — Playwright Scanner (recommended):**
+1. Run `kz_scanner.py` via the Scanner tab — it opens a persistent browser profile
+2. Log in once; the session is reused on every subsequent scan
+3. Import the JSON results into the app
 
 ---
 
@@ -216,12 +253,13 @@ All data stays in your browser's `localStorage`, scoped to the file path (or ori
 | Key | Contents |
 |---|---|
 | `kz-downloader-profiles` | Profile queue — restored automatically on every open |
-| `kz-downloader-opts` | Options: format, output folder, save mode, filename template, date filter |
+| `kz-downloader-opts` | Settings: format, output folder, save mode, filename template, date filter |
 | `kz-history` | Link and command history — up to 500 entries, newest first |
 | `kz-presets` | User-managed presets — seeded with built-in Tata presets on first load |
 | `kz-device` | Selected device (`windows` / `mac` / `linux` / `android` / `ios`) |
+| `kz_pw_persist_v1` | Playwright scanner: output folder, KZ folder path, scroll count, platform selection |
 
-To back up history, use **Export selected** in the History tab. To wipe everything, use **⊘ Clear saved** in the Options tab or **Clear all history** in the History tab.
+To back up history, use **Export selected** in the History tab. To wipe everything, use **⊘ Clear saved** in the Settings tab or **Clear all history** in the History tab.
 
 ---
 
@@ -229,7 +267,8 @@ To back up history, use **Export selected** in the History tab. To wipe everythi
 
 ```
 KZ-Downloader/
-├── KZ-Downloader.html   # Main app — open this in a browser
+├── kz_scanner.py        # Playwright scanner script (download from Scanner tab)
+├── kz_scan.bat          # Guided launcher for kz_scanner.py (Windows)
 ├── README.md            # This file
 └── CHANGELOG.md         # Full version history
 ```
@@ -248,18 +287,6 @@ KZ-Downloader/
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
-
-| Version | Date | Summary |
-|---|---|---|
-| **v2.7** | 28-06-2026 | Save location mode toggle (Fixed / Ask every time); History and Options tabs swapped positions |
-| **v2.6** | 28-06-2026 | Presets tab with full CRUD, export, import; Output block moved inline to Profiles tab; all commands updated to `python -m yt_dlp` |
-| **v2.5** | 28-06-2026 | Device selector (Windows / Mac / Linux / Android / iOS) with auto-detection and per-device UI |
-| **v2.4** | 28-06-2026 | Android / Termux support; Share button; mobile fixes (clipboard fallback, touch targets, input zoom) |
-| **v2.3** | 27-06-2026 | Button and tab contrast fixes across both themes |
-| **v2.2** | 27-06-2026 | History tab; responsive code blocks; Linux setup guide expanded |
-| **v2.1** | 27-06-2026 | Persistent localStorage for profiles and options |
-| **v2.0** | 27-06-2026 | Rebuilt as KZ Downloader (universal); platform auto-detection; Setup Guide tab |
-| **v1.0** | 26-06-2026 | Initial release — yt-dlp Tata Downloader |
 
 ---
 

@@ -8,6 +8,322 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v3.6 — Feature: Playwright Scanner — Collapsible Setup + Enhanced Run Options
+**Date:** 29-06-2026
+
+### Added
+
+**Collapsible one-time setup block (Steps 1 & 2)** — the "Install dependencies" and "Download kz_scanner.py" steps are now grouped inside a collapsible `① ② One-time setup` section that starts collapsed. Clicking the header toggles the body open and closed with a chevron indicator. Reduces visual noise for users who have already completed initial setup.
+
+**Website / Platform selector** — a dropdown added to Step 3 with explicit options for LinkedIn, Instagram, Facebook, YouTube, Twitter/X, TikTok, Vimeo, and Other/Generic, plus a default "Auto-detect from URL" entry. When the user pastes a Target URL the platform is detected automatically using URL pattern matching. A `⟳ Auto-detect` button beside the label re-runs detection on demand. Selection persists across sessions via `localStorage`.
+
+**Output folder for JSON** — a path input field added to Step 3 where the user specifies the directory the JSON file should be saved in (e.g. `C:\Users\You\Downloads`). Leaving it blank saves to the current working directory. Value persists across sessions. A `✓ saved` flash badge confirms writes.
+
+**KZ Downloader folder path** — a second path input field added to Step 3 specifying where `kz_scanner.py` lives. When filled in, the generated command is prefixed with `cd /d "..."` so the script can be run from any CMD window, not just one opened from inside that folder. A contextual hint notice appears when the field is active.
+
+**Auto-named output filename** — the output filename is no longer a free-text field. It is generated automatically in the format `platform-dd-mm-yy-hh-mm.json` (e.g. `linkedin-29-06-26-14-03.json`) using the platform selection and the current time at the moment the command is viewed. The computed filename is shown in a read-only field. The full output path (folder + filename) is wired into the `--out` argument in the generated command.
+
+**`togglePwSetup()`** — toggles the collapsible setup body and rotates the chevron icon.
+
+**`loadPwPersist()` / `savePwPersist()`** — read and write the Playwright panel's persistent values (output folder, KZ folder, scroll count, platform selection) to `localStorage` under `kz_pw_persist_v1`. `loadPwPersist()` is called when the Playwright tab is activated. `savePwPersist()` is called on any field change.
+
+**`pwAutoDetectPlatform(force)`** — checks the Target URL against `PW_PLATFORM_PATTERNS` and updates the platform selector. Called automatically on URL input (only overrides when selector is on `auto`) and manually via the `⟳ Auto-detect` button (always overrides).
+
+**`buildPwFilename()`** — constructs the timestamped output filename from the current platform selection and `new Date()`. Called inside `updatePwCommand()` on every rebuild.
+
+**`PW_PLATFORM_PATTERNS`** — array of `{rx, val}` objects mapping URL regexes to platform selector values; used by `pwAutoDetectPlatform()`.
+
+**`PW_PERSIST_KEY`** — localStorage key constant (`'kz_pw_persist_v1'`) for Playwright panel persistence.
+
+### Changed
+
+**`updatePwCommand()`** — extended to read the new output folder, KZ folder, and platform fields. Now calls `buildPwFilename()` to compute the output filename, then constructs the full output path by joining the folder (if set) and the filename with the correct path separator. If a KZ folder is specified the command is prefixed with `cd /d "..."`. The `--out` argument always receives the full resolved path.
+
+**Step 3 layout** — reorganised into four distinct rows: Target URL; Platform selector + Scrolls side-by-side; Output folder + KZ folder side-by-side; Output filename (read-only) + Generated command.
+
+**`setScanMode()`** — now calls `loadPwPersist()` in addition to `updatePwCommand()` when switching to Playwright mode.
+
+### Storage Keys
+
+| Key | Contents |
+|---|---|
+| `kz_pw_persist_v1` | Playwright panel: output folder, KZ folder path, scroll count, platform selection |
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | Collapsible setup block HTML + CSS (`.pw-collapsible`, `.pw-collapsible-header`, `.pw-collapsible-body`, `.pw-collapse-chevron`, `.pw-persist-badge`, `.pw-inline-btn`); Step 3 restructured with platform selector, output folder, KZ folder, read-only filename fields; `togglePwSetup()`, `loadPwPersist()`, `savePwPersist()`, `showBadge()`, `pwAutoDetectPlatform()`, `buildPwFilename()`, `PW_PLATFORM_PATTERNS`, `PW_PERSIST_KEY` added; `updatePwCommand()` and `setScanMode()` updated |
+| `CHANGELOG.md` | This entry |
+
+---
+
+## v3.5 - Fix: LinkedIn Scanner Extraction + Safer Scrolling
+**Date:** 29-06-2026
+
+### Fixed
+
+**LinkedIn video feed scrolling without collecting links** - the scanner was moving past visible LinkedIn video posts but often found `0` items because the extractor depended on older feed container selectors and only looked for `/feed/update/` anchors inside those containers.
+
+LinkedIn extraction now captures post/activity links from multiple modern LinkedIn patterns:
+
+- `/feed/update/` links
+- `/posts/` links
+- `urn:li:activity:*` values from `href`, `data-urn`, `data-id`, and `id`
+- `urn:li:activity:*` references found in the page HTML
+
+Activity URNs are converted into stable LinkedIn feed update URLs so the JSON output contains usable platform links.
+
+**LinkedIn scroll speed too aggressive** - LinkedIn pages now scroll in smaller steps (`900px`) so posts stay in view long enough to be harvested. The scanner also harvests once before and once after each scroll.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `kz_scanner.py` | Broadened LinkedIn extraction; added activity URN conversion; added page HTML fallback scan; reduced LinkedIn scroll distance; harvests before and after each scroll |
+| `CHANGELOG.md` | This entry |
+
+---
+
+## v3.4 - Change: Saved-Login Scanner Window + Launcher Defaults
+**Date:** 29-06-2026
+
+### Changed
+
+**CDP/debug Chrome flow replaced with a separate saved-login scanner window** - the guided launcher no longer kills Chrome or launches Chrome in remote debugging mode. The default browser mode now opens a separate persistent browser window using `kz_browser_profile`, so logins and cookies are preserved between scans without touching the user's normal Chrome session.
+
+`kz_scanner.py` now tries to launch real Chrome via Playwright's `channel='chrome'` when available, falling back to bundled Chromium if Chrome is not available. The scanner also reuses the startup `about:blank` tab instead of opening an extra tab.
+
+**Page load wait shortened** - normal navigation timeout reduced from `60s` to `15s`. If a site keeps loading in the browser, the scanner continues to the manual ENTER prompt instead of waiting too long.
+
+**Launcher defaults simplified** - default mode now uses:
+
+- Saved-login scanner window
+- `10` scrolls
+- `2.5s` delay
+- Auto platform detection
+- No HTTP bridge
+- `kz_scan_results.json`
+
+**Advanced launcher skip controls added** - advanced mode now supports:
+
+- `S` - skip this option and keep the default
+- `A` - skip all remaining options and keep defaults
+
+Skip controls were added to browser mode, scroll count, delay, platform override, HTTP bridge, and output filename prompts.
+
+**HTTP bridge prompt changed from Y/N to 1/2** - bridge selection now uses numbered choices for consistency with the rest of the launcher.
+
+### Fixed
+
+**Launcher killing Chrome and itself** - the scanner launcher no longer uses `taskkill` as part of the normal flow.
+
+**Default scroll count too high** - default scroll count lowered from `60` to `10`.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `kz_scan.bat` | Defaults changed to saved-login profile and 10 scrolls; advanced skip controls added; bridge prompt changed to 1/2; CDP/debug flow bypassed; final scanner command passes `--profile` |
+| `kz_scanner.py` | Normal mode prefers real Chrome via `channel='chrome'`; reuses startup page; navigation timeout reduced to 15s |
+| `CHANGELOG.md` | This entry |
+
+---
+
+## v3.3 — Feature: Guided BAT Launcher + CDP Browser Reuse
+**Date:** 29-06-2026
+
+### Added
+
+**`kz_scan.bat` — step-by-step guided launcher for `kz_scanner.py`** — replaces manually typing the full command with a sequential prompt flow. Each parameter is asked one at a time with numbered presets; the final screen shows the assembled command before anything runs.
+
+| Step | Prompt | Options |
+|---|---|---|
+| 1 | Browser mode | Reuse existing Chrome (CDP) / New browser window |
+| 2 | Target URL | Free text; loops until non-empty |
+| 3 | Scroll steps | Quick 20 / Normal 60 / Deep 120 / Custom |
+| 4 | Scroll delay | Fast 1.5s / Normal 2.5s / Slow 4.0s / Custom |
+| 5 | Platform override | Auto-detect / yt / ig / fb / li / tw / gen |
+| 6 | HTTP bridge | Y starts `--serve` on port 7474 / N skips |
+| 7 | Output filename | Default `kz_scan_results.json` / Custom |
+
+Confirm screen shows all chosen values. User can press Enter to run, `R` to restart from the top, or `Q` to quit without running.
+
+**CDP browser reuse mode (`--cdp` flag in `kz_scanner.py`)** — Playwright can now connect to an already-running Chrome instance via the Chrome DevTools Protocol instead of spawning a new Chromium window. This keeps the user's existing profiles, cookies, and logged-in sessions intact. A new tab is opened inside the existing Chrome window for the scan, and only that tab is closed when the scan finishes — the rest of the session is untouched.
+
+`run_scan()` accepts a new `cdp_url` parameter (default `None`). When set:
+- Connects via `p.chromium.connect_over_cdp(cdp_url)`
+- Reuses `browser.contexts[0]` (existing profile context with all cookies)
+- Opens a new page inside that context, navigates to the target URL, scans, then closes only the page
+
+When `cdp_url` is `None`, existing behaviour (persistent profile launch) is unchanged.
+
+**Fixed output directory for JSON results** — all scan output files are now saved to `D:\Projects\KZ Downloader\JSONs\` by default. Step 7 prompts only for the filename; the folder is fixed. The bat creates the directory automatically via `mkdir` if it does not exist.
+
+### Fixed
+
+**Box-drawing characters caused garbled output on Windows CMD** — the original bat used Unicode border characters (`╔ ║ ╚ ═`) that rendered as mojibake on CMD's default code page. All decorative characters replaced with plain ASCII (`= - [ ]`).
+
+**Bat closed immediately after final confirmation** — `set "CMD=python kz_scanner.py "!URL!" ..."` embedded quotes around `!URL!` inside the outer `set "..."` quoting, which caused CMD to silently misparse and exit on execution. Fixed by keeping the URL separate from the args string and calling Python directly: `python kz_scanner.py "!URL!" !ARGS!`.
+
+**CDP connection refused (`ECONNREFUSED 127.0.0.1:9222`)** — `localhost` on modern Windows resolves to IPv6 `::1`, but Chrome's debug server binds to IPv4 `127.0.0.1`. All CDP references changed from `http://localhost:9222` to `http://127.0.0.1:9222` in both `kz_scan.bat` and `kz_scanner.py`.
+
+**Chrome debug port setup unreliable** — the original setup used text-parsing of PowerShell output (prone to whitespace/encoding mismatches), a fixed 4-second wait after launch (not enough), and a single hardcoded Chrome path. Replaced with:
+
+- **Port check via exit code** — PowerShell uses `exit 0` / `exit 1` instead of printing text; CMD reads `!errorlevel!`, eliminating any text-parsing issues
+- **Chrome path finder** — checks three locations in order: `C:\Program Files\...`, `C:\Program Files (x86)\...`, `%LOCALAPPDATA%\...` (user installs); exits with a clear message if none found
+- **Kill-wait loop** — polls `tasklist` every second after `taskkill` and only proceeds once `chrome.exe` is fully gone from the process list
+- **Port retry loop** — after launching Chrome, polls `http://127.0.0.1:9222/json/version` every second for up to 15 seconds; reports which second the port became ready; exits with a diagnostic message if the port never opens
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `kz_scan.bat` | Created; 7-step guided prompt flow; ASCII-only output; URL kept separate from ARGS to fix quote nesting; CDP URL changed to `127.0.0.1`; Chrome setup replaced with path finder, kill-wait loop, and 15s port retry loop; output directory fixed to `D:\Projects\KZ Downloader\JSONs\` |
+| `kz_scanner.py` | `run_scan()` gains `cdp_url` parameter; CDP branch added (connect, reuse context, open tab, scan, close tab only); CLI gains `--cdp URL` argument; CDP default URL changed to `http://127.0.0.1:9222` |
+| `CHANGELOG.md` | This entry |
+
+---
+
+## v3.2 — Feature: Guided BAT Launcher + CDP Browser Reuse
+**Date:** 29-06-2026
+
+### Added
+
+**`kz_scan.bat` — step-by-step guided launcher for `kz_scanner.py`** — replaces manually typing the full command with a sequential prompt flow. Each parameter is asked one at a time with numbered presets; the final screen shows the assembled command before anything runs.
+
+| Step | Prompt | Options |
+|---|---|---|
+| 1 | Browser mode | Reuse existing Chrome (CDP) / New browser window |
+| 2 | Target URL | Free text; loops until non-empty |
+| 3 | Scroll steps | Quick 20 / Normal 60 / Deep 120 / Custom |
+| 4 | Scroll delay | Fast 1.5s / Normal 2.5s / Slow 4.0s / Custom |
+| 5 | Platform override | Auto-detect / yt / ig / fb / li / tw / gen |
+| 6 | HTTP bridge | Y starts `--serve` on port 7474 / N skips |
+| 7 | Output filename | Default `kz_scan_results.json` / Custom |
+
+Confirm screen shows all chosen values and the final `python kz_scanner.py ...` command. User can press Enter to run, `R` to restart from the top, or `Q` to quit without running.
+
+**CDP browser reuse mode (`--cdp` flag in `kz_scanner.py`)** — Playwright can now connect to an already-running Chrome instance via the Chrome DevTools Protocol instead of spawning a new Chromium window. This keeps the user's existing profiles, cookies, and logged-in sessions intact. A new tab is opened inside the existing Chrome window for the scan, and only that tab is closed when the scan finishes — the rest of the session is untouched.
+
+`run_scan()` accepts a new `cdp_url` parameter (default `None`). When set:
+- Connects via `p.chromium.connect_over_cdp(cdp_url)`
+- Reuses `browser.contexts[0]` (existing profile context with all cookies)
+- Opens a new page inside that context, navigates to the target URL, scans, then closes only the page
+
+When `cdp_url` is `None`, existing behaviour (persistent profile launch) is unchanged.
+
+**Auto Chrome debug port setup in `kz_scan.bat`** — when CDP mode is selected, the bat pings `http://localhost:9222/json` via PowerShell to check if Chrome is already in debug mode. If the port is open, it connects directly. If not, it closes Chrome via `taskkill`, relaunches it with `--remote-debugging-port=9222 --no-first-run`, waits for it to start, and holds for user confirmation before handing off to the scanner.
+
+### Fixed
+
+**Box-drawing characters caused garbled output on Windows CMD** — the original bat used Unicode border characters (`╔ ║ ╚ ═`) that rendered as mojibake on CMD's default code page. All decorative characters replaced with plain ASCII (`= - [ ]`).
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `kz_scan.bat` | Created; 7-step guided prompt flow; CDP mode step with auto port-check and Chrome relaunch; ASCII-only output for CMD compatibility |
+| `kz_scanner.py` | `run_scan()` gains `cdp_url` parameter; CDP branch added (connect, reuse context, open tab, scan, close tab only); CLI gains `--cdp URL` argument passed through to `run_scan()` |
+| `CHANGELOG.md` | This entry |
+
+---
+
+## v3.1 — Feature: Playwright Scanner + Proxy Scanner Limitations
+**Date:** 29-06-2026
+ 
+### Root Cause (Context)
+ 
+The existing `scanMedia()` function fetched pages through public CORS proxies (`allorigins.win` → `corsproxy.io`) and parsed the returned static HTML for video elements, `og:video` meta tags, and media URLs embedded in `<script>` tags.
+ 
+This approach is architecturally incapable of working for the following categories of target:
+ 
+| Target type | Why the proxy fails |
+|---|---|
+| LinkedIn | Returns a login wall or heavily stripped JS-rendered shell to unauthenticated requests. The actual video post HTML is only generated after authentication and JS execution. The proxy receives zero usable content. |
+| Instagram, Facebook | Same pattern — proxy receives the pre-auth shell. |
+| Any SPA / React / Next.js page | Media URLs are injected by JavaScript after initial HTML load. The proxy delivers the empty shell; `<video src>` tags and media fetch calls happen entirely client-side. |
+| Proxy availability | Both `allorigins.win` and `corsproxy.io` are public free proxies that go down, get rate-limited, or get blocked by LinkedIn and Meta CDN headers with no notice. |
+ 
+The Python companion script `linkedin_video_posts.py` already solved this correctly: it uses Playwright precisely because a real browser session — with cookies, JavaScript execution, and scroll simulation — is required to see authenticated post content.
+ 
+---
+ 
+### Added
+ 
+**`kz_scanner.py` — Playwright-based local scanner** — a new Python helper script that the user runs locally. Unlike the in-browser proxy scanner, it uses Playwright to launch a persistent browser profile (`kz_browser_profile`) so the user's existing logins and cookies are preserved. Playwright performs real JS execution, authenticated page load, and configurable infinite-scroll simulation before harvesting media URLs.
+ 
+The scanner operates in two output modes, selectable via CLI flag:
+ 
+| Mode | Flag | Behaviour |
+|---|---|---|
+| JSON file | *(default)* | Writes scan results to `kz_scan_results.json` in the configured output directory |
+| HTTP bridge | `--serve` | Starts a local HTTP server on port `7474`; the KZ Downloader HTML page polls it for results |
+ 
+**`run_scan(url, platform, scrolls, delay, output_path, cdp_url, serve)` function** — core scanner entry point. Accepts all scan parameters via keyword arguments. Browser launch, page navigation, scroll loop, and URL harvest are fully encapsulated here.
+ 
+**Platform-aware extraction** — the scanner applies per-platform extraction logic based on a `platform` argument (`yt` / `ig` / `fb` / `li` / `tw` / `gen`). When set to `auto`, platform is inferred from the URL before extraction begins.
+ 
+**LinkedIn-specific extraction** — captures post and activity links from multiple modern LinkedIn DOM patterns:
+ 
+- `/feed/update/` anchors
+- `/posts/` anchors
+- `urn:li:activity:*` values found in `href`, `data-urn`, `data-id`, and `id` attributes
+- `urn:li:activity:*` references found anywhere in the raw page HTML
+Activity URNs are normalised into stable `https://www.linkedin.com/feed/update/urn:li:activity:…` URLs so the JSON output contains directly usable platform links.
+ 
+**Configurable scroll behaviour** — scroll step count and inter-step delay are CLI parameters. The scroll loop harvests once before and once after each step so that posts visible at the top and bottom of each viewport position are both captured. LinkedIn pages use a smaller scroll step (`900 px`) to keep posts in view long enough to be registered by the extractor.
+ 
+**`--serve` HTTP bridge mode** — when enabled, after the scan completes the script starts a `http.server`-based local HTTP server at `http://127.0.0.1:7474`. The server exposes a single JSON endpoint (`/results`) that the Scanner tab in KZ Downloader polls. Enables a real-time workflow: run scanner in one window, import results live in the browser without touching a file.
+ 
+**CLI interface** — full argument set:
+ 
+| Argument | Default | Purpose |
+|---|---|---|
+| `url` | *(required)* | Target page URL |
+| `--platform` | `auto` | Platform override (`yt` / `ig` / `fb` / `li` / `tw` / `gen`) |
+| `--scrolls` | `10` | Number of scroll steps |
+| `--delay` | `2.5` | Seconds between scroll steps |
+| `--output` | `kz_scan_results.json` | Output JSON filename |
+| `--cdp` | *(none)* | CDP URL to connect to an already-running Chrome instance instead of launching a new window |
+| `--serve` | *(off)* | Start HTTP bridge after scan completes |
+| `--profile` | `kz_browser_profile` | Persistent browser profile directory name |
+ 
+---
+ 
+### Changed
+ 
+**Scanner tab UI — Playwright workflow** — the Scanner tab in `KZ-Downloader.html` now presents two distinct scanning paths:
+ 
+| Path | When to use | How it works |
+|---|---|---|
+| **Playwright scanner** (primary) | LinkedIn, Instagram, Facebook, authenticated pages, SPAs | User runs `kz_scanner.py` locally; results imported into the tab via JSON file upload or HTTP bridge poll |
+| **Proxy scanner** (secondary) | Simple public pages with static HTML | Existing `allorigins.win` / `corsproxy.io` flow; retained for non-authenticated, non-JS-rendered targets |
+ 
+**Proxy scanner — honest capability display** — the proxy scanner section is now clearly labelled with a limitations notice. The UI explains that it cannot scan authenticated platforms (LinkedIn, Instagram, Facebook), SPA-rendered pages, or any target that requires JS execution. A contextual warning is shown automatically when the user pastes a LinkedIn, Instagram, or Facebook URL into the proxy scanner input.
+ 
+**Playwright import panel** — a new UI section in the Scanner tab guides the user through the Playwright workflow:
+ 
+| Step | UI element |
+|---|---|
+| 1 | Code block showing the `kz_scanner.py` install and run command |
+| 2 | JSON file import button — reads `kz_scan_results.json` and populates the results list |
+| 3 | HTTP bridge poll button — fetches `http://127.0.0.1:7474/results` if `--serve` mode is active |
+ 
+Imported results flow into the same `renderScanResults()` / `addScannedItems()` pipeline as proxy scan results — no separate handling path.
+ 
+---
+ 
+### Files Changed
+ 
+| File | Change |
+|---|---|
+| `kz_scanner.py` | Created — Playwright scanner; persistent profile launch; `channel='chrome'` preference with Chromium fallback; LinkedIn multi-pattern extraction; activity URN normalisation; configurable scroll count and delay; harvest-before-and-after-scroll loop; `--serve` HTTP bridge mode; `--cdp` CDP connect mode; full CLI interface |
+| `KZ-Downloader.html` | Scanner tab updated — Playwright workflow panel added (install guide, JSON import, HTTP bridge poll); proxy scanner moved to secondary position with limitations notice; LinkedIn/Instagram/Facebook URL detection triggers contextual proxy-scanner warning; imported results routed through existing `renderScanResults()` and `addScannedItems()` |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v3.0 — Fix: Media Scanner Deep Extraction + UI Polish
 **Date:** 29-06-2026
 

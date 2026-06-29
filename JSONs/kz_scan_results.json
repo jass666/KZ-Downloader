@@ -1,0 +1,108 @@
+{
+  "scanner": "KZ Downloader Playwright Scanner v1.0",
+  "source_url": "https://www.linkedin.com/company/tatamotorscommercialvehicles/posts/?feedView=videos",
+  "platform": "LinkedIn",
+  "dot": "li",
+  "scrolls_done": 10,
+  "item_count": 14,
+  "items": [
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7477263349181882368/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7471911849962307584/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7468633081839656960/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7468513808278265856/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7468289516416733184/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7468184478918803457/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7466002878407671808/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7464576195406356480/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7461743890124111872/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7461377729381351424/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7460917268999364608/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7460573138800533505/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7460199000865091584/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    },
+    {
+      "type": "PLATFORM",
+      "url": "https://www.linkedin.com/feed/update/urn:li:activity:7459839995697225728/",
+      "dot": "li",
+      "platform": "LinkedIn",
+      "source": "linkedin_data-urn"
+    }
+  ]
+}

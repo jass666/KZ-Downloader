@@ -529,6 +529,61 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
 :root[data-theme="dark"]  .scan-mode-tab.active { background:#004d44; color:#00e8c8; border-bottom:2px solid #00d9b8;}
 :root[data-theme="light"] .scan-mode-tab.active { background:#006657; color:#fff; border-bottom:2px solid #004840;}
 
+/* ─── PLAYWRIGHT COLLAPSIBLE SETUP ──────────────────────── */
+.pw-collapsible{
+  border:1px solid var(--border);
+  border-radius:8px;
+  margin-bottom:.875rem;
+  overflow:hidden;
+}
+.pw-collapsible-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  background:var(--surface2);border:none;cursor:pointer;
+  transition:background .15s;
+  text-align:left;
+}
+.pw-collapsible-header:hover{background:var(--accent-dim)}
+.pw-collapsible-label{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:600;color:var(--text);
+}
+.pw-collapse-nums{
+  font-size:13px;color:var(--accent-text);
+  background:var(--accent-dim);border:1px solid var(--accent-bdr);
+  border-radius:5px;padding:1px 7px;letter-spacing:.03em;
+}
+.pw-collapse-hint{
+  font-size:11px;font-weight:400;color:var(--text-muted);
+}
+.pw-collapse-chevron{
+  font-size:12px;color:var(--text-muted);
+  transition:transform .2s;
+  user-select:none;flex-shrink:0;
+}
+.pw-collapse-chevron.open{transform:rotate(90deg)}
+.pw-collapsible-body{
+  border-top:1px solid var(--border);
+  padding:0 1rem;
+  background:var(--surface);
+}
+
+/* inline icon button inside opt-label */
+.pw-inline-btn{
+  font-size:10px;font-weight:600;
+  padding:2px 7px;border-radius:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text-sec);cursor:pointer;
+  transition:all .15s;white-space:nowrap;
+}
+.pw-inline-btn:hover{border-color:var(--accent-bdr);color:var(--accent-text);background:var(--accent-dim)}
+
+/* persisted-value badge */
+.pw-persist-badge{
+  font-size:10px;font-weight:700;letter-spacing:.04em;
+  color:var(--ok-text);opacity:.8;
+}
+
 /* Playwright command box */
 .pw-cmd-block{
   background:var(--term-bg);border:1px solid #333;border-radius:7px;
@@ -905,55 +960,123 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
     <div id="scan-pane-playwright" style="display:none">
       <div class="card">
         <div class="card-title">Playwright scanner — setup</div>
-        <div class="step-desc" style="margin-bottom:.75rem">
+        <div class="step-desc" style="margin-bottom:.875rem">
           The Playwright scanner runs <strong>locally on your machine</strong>, opens a real browser
           with your login session, scrolls the page, and exports a JSON file you import here.
           Supports LinkedIn, Instagram, Facebook, and any login-gated page.
         </div>
 
-        <div class="setup-step">
+        <!-- ── COLLAPSIBLE: Steps 1 & 2 (one-time setup) ── -->
+        <div class="pw-collapsible" id="pw-setup-collapsible">
+          <button class="pw-collapsible-header" onclick="togglePwSetup()" id="pw-setup-toggle">
+            <span class="pw-collapsible-label">
+              One-time setup
+              <span class="pw-collapse-hint">Install dependencies &amp; download scanner</span>
+            </span>
+            <span class="pw-collapse-chevron" id="pw-setup-chevron">▸</span>
+          </button>
+          <div class="pw-collapsible-body" id="pw-setup-body" style="display:none">
+
+            <div class="setup-step" style="padding-top:.75rem">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                <div class="step-title">Install dependencies (one-time)</div>
+                <div class="pw-cmd-block">pip install playwright<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+                <div class="pw-cmd-block">playwright install chromium<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+              </div>
+            </div>
+
+            <div class="setup-step" style="margin-top:.75rem;padding-bottom:.75rem">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                <div class="step-title">Download kz_scanner.py</div>
+                <div class="step-desc">Save it in the same folder as KZ Downloader. <a href="#" onclick="downloadKzScanner();return false" style="font-weight:600">⬇ Download kz_scanner.py</a></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── STEP 1: Run the scanner ── -->
+        <div class="setup-step" style="margin-top:.875rem">
           <div class="step-num">1</div>
           <div class="step-body">
-            <div class="step-title">Install dependencies (one-time)</div>
-            <div class="pw-cmd-block">pip install playwright<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
-            <div class="pw-cmd-block">playwright install chromium<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
-          </div>
-        </div>
-
-        <div class="setup-step" style="margin-top:.75rem">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <div class="step-title">Download kz_scanner.py</div>
-            <div class="step-desc">Save it in the same folder as KZ Downloader. <a href="#" onclick="downloadKzScanner();return false" style="font-weight:600">⬇ Download kz_scanner.py</a></div>
-          </div>
-        </div>
-
-        <div class="setup-step" style="margin-top:.75rem">
-          <div class="step-num">3</div>
-          <div class="step-body">
             <div class="step-title">Run the scanner</div>
-            <div class="step-desc">Replace the URL with your target page. The browser will open — log in if needed, then press Enter in the terminal.</div>
-            <div style="margin-bottom:6px">
+            <div class="step-desc">Configure options below. The browser will open — log in if needed, then press Enter in the terminal.</div>
+
+            <!-- Row 1: Target URL -->
+            <div style="margin-bottom:8px">
               <div class="opt-label" style="margin-bottom:4px">Target URL</div>
-              <input type="text" id="pw-url-input" placeholder="https://www.linkedin.com/company/yourcompany/posts/?feedView=videos" style="width:100%;margin-bottom:6px" oninput="updatePwCommand()" />
+              <input type="text" id="pw-url-input" placeholder="https://www.linkedin.com/company/yourcompany/posts/?feedView=videos" style="width:100%" oninput="updatePwCommand();pwAutoDetectPlatform()" />
             </div>
+
+            <!-- Row 2: Platform selector + Scrolls -->
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <div style="flex:1.4">
+                <div class="opt-label" style="display:flex;align-items:center;justify-content:space-between">
+                  <span>Website / Platform</span>
+                  <button class="pw-inline-btn" onclick="pwAutoDetectPlatform(true)" title="Auto-detect from URL">⟳ Auto-detect</button>
+                </div>
+                <select id="pw-platform-sel" style="width:100%" onchange="updatePwCommand();savePwPersist()">
+                  <option value="auto">— Auto-detect from URL —</option>
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="youtube">YouTube</option>
+                  <option value="twitter">Twitter / X</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="vimeo">Vimeo</option>
+                  <option value="other">Other / Generic</option>
+                </select>
+              </div>
+              <div style="flex:.6">
+                <div class="opt-label">Scrolls</div>
+                <input type="text" id="pw-scrolls" value="60" style="width:100%" oninput="updatePwCommand();savePwPersist()" />
+              </div>
+            </div>
+
+            <!-- Row 3: Output folder + KZ folder -->
             <div style="display:flex;gap:8px;margin-bottom:8px">
               <div style="flex:1">
-                <div class="opt-label">Scrolls</div>
-                <input type="text" id="pw-scrolls" value="60" style="width:100%" oninput="updatePwCommand()" />
+                <div class="opt-label" style="display:flex;align-items:center;justify-content:space-between">
+                  <span>Output folder for JSON</span>
+                  <span class="pw-persist-badge" id="pw-out-saved-badge" style="display:none">✓ saved</span>
+                </div>
+                <input type="text" id="pw-out-dir" placeholder='e.g. C:\Users\You\Downloads  or  leave blank for current folder'
+                  style="width:100%" oninput="updatePwCommand();savePwPersist()" />
               </div>
               <div style="flex:1">
-                <div class="opt-label">Output file</div>
-                <input type="text" id="pw-out" value="kz_scan_results.json" style="width:100%" oninput="updatePwCommand()" />
+                <div class="opt-label" style="display:flex;align-items:center;justify-content:space-between">
+                  <span>KZ Downloader folder</span>
+                  <span class="pw-persist-badge" id="pw-kzdir-saved-badge" style="display:none">✓ saved</span>
+                </div>
+                <input type="text" id="pw-kz-dir" placeholder='e.g. C:\Tools\KZDownloader  (so cmd can run from anywhere)'
+                  style="width:100%" oninput="updatePwCommand();savePwPersist()" />
               </div>
             </div>
-            <div class="opt-label">Generated command</div>
+
+            <!-- Output filename preview -->
+            <div style="margin-bottom:8px">
+              <div class="opt-label" style="display:flex;align-items:center;justify-content:space-between">
+                <span>Output filename <span style="font-weight:400;opacity:.7">(auto-named: source-dd-mm-yy-hh-mm)</span></span>
+                <span id="pw-filename-preview" style="font-family:'Courier New',monospace;font-size:11px;color:var(--accent-text)"></span>
+              </div>
+              <input type="text" id="pw-out" value="" readonly
+                style="width:100%;background:var(--surface);cursor:default;color:var(--text-sec)"
+                title="Filename is auto-generated from platform and current time" />
+            </div>
+
+            <div class="opt-label" style="margin-bottom:4px">Generated command</div>
             <div class="pw-cmd-block" id="pw-cmd-display">python kz_scanner.py "https://..." --scrolls 60<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-info" id="pw-kzdir-hint" style="display:none;margin-top:6px;font-size:11px">
+              💡 Command uses <code>cd</code> to the KZ Downloader folder first, so it can run from any CMD window.
+            </div>
           </div>
         </div>
 
+        <!-- ── STEP 2: Import results ── -->
         <div class="setup-step" style="margin-top:.75rem">
-          <div class="step-num">4</div>
+          <div class="step-num">2</div>
           <div class="step-body">
             <div class="step-title">Import the results JSON</div>
             <div class="step-desc">When the scan finishes, import the output file below.</div>
@@ -963,7 +1086,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
               ondragleave="this.classList.remove('drag-over')"
               ondrop="handlePwDrop(event)">
               <span class="pw-icon">📂</span>
-              <strong>Click to open</strong> or drag &amp; drop <code>kz_scan_results.json</code> here
+              <strong>Click to open</strong> or drag &amp; drop your <code>kz_scan_results.json</code> here
             </div>
             <input type="file" id="pw-json-file" accept=".json" style="display:none" onchange="importPwJson(event)" />
           </div>
@@ -2185,20 +2308,137 @@ function setScanMode(mode, el){
   // Clear shared results when switching mode
   document.getElementById('scan-status').innerHTML = '';
   document.getElementById('scan-results-wrap').style.display = 'none';
-  if(mode === 'playwright') updatePwCommand();
+  if(mode === 'playwright'){ loadPwPersist(); updatePwCommand(); }
   if(mode === 'bridge') checkBridge();
 }
 
-/* ── PLAYWRIGHT COMMAND BUILDER ────────────────────────────────────────── */
+/* ── PLAYWRIGHT COLLAPSIBLE SETUP TOGGLE ───────────────────────────────── */
+function togglePwSetup(){
+  const body    = document.getElementById('pw-setup-body');
+  const chevron = document.getElementById('pw-setup-chevron');
+  if(!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : '';
+  if(chevron) chevron.classList.toggle('open', !isOpen);
+}
+
+/* ── PLAYWRIGHT PERSISTENCE ─────────────────────────────────────────────── */
+const PW_PERSIST_KEY = 'kz_pw_persist_v1';
+
+function loadPwPersist(){
+  try{
+    const raw = localStorage.getItem(PW_PERSIST_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el && val != null) el.value = val; };
+    setVal('pw-out-dir',      d.outDir);
+    setVal('pw-kz-dir',       d.kzDir);
+    setVal('pw-scrolls',      d.scrolls);
+    if(d.platform){ const sel = document.getElementById('pw-platform-sel'); if(sel) sel.value = d.platform; }
+    // Show saved badges if values loaded
+    if(d.outDir)  showBadge('pw-out-saved-badge');
+    if(d.kzDir)   showBadge('pw-kzdir-saved-badge');
+  } catch(e){}
+}
+
+function savePwPersist(){
+  try{
+    const g = id => (document.getElementById(id)||{value:''}).value.trim();
+    const sel = document.getElementById('pw-platform-sel');
+    const d = {
+      outDir:   g('pw-out-dir'),
+      kzDir:    g('pw-kz-dir'),
+      scrolls:  g('pw-scrolls'),
+      platform: sel ? sel.value : 'auto',
+    };
+    localStorage.setItem(PW_PERSIST_KEY, JSON.stringify(d));
+    if(d.outDir)  showBadge('pw-out-saved-badge');
+    if(d.kzDir)   showBadge('pw-kzdir-saved-badge');
+  } catch(e){}
+}
+
+function showBadge(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.display = '';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 2200);
+}
+
+/* ── PLAYWRIGHT AUTO-DETECT PLATFORM ───────────────────────────────────── */
+const PW_PLATFORM_PATTERNS = [
+  { rx:/linkedin\.com/i,    val:'linkedin'  },
+  { rx:/instagram\.com/i,   val:'instagram' },
+  { rx:/facebook\.com|fb\.watch/i, val:'facebook' },
+  { rx:/youtube\.com|youtu\.be/i,  val:'youtube'  },
+  { rx:/twitter\.com|x\.com/i,     val:'twitter'  },
+  { rx:/tiktok\.com/i,      val:'tiktok'    },
+  { rx:/vimeo\.com/i,       val:'vimeo'     },
+];
+
+function pwAutoDetectPlatform(force){
+  const urlEl = document.getElementById('pw-url-input');
+  const sel   = document.getElementById('pw-platform-sel');
+  if(!urlEl || !sel) return;
+  // Only auto-set if currently on 'auto' or forced
+  if(!force && sel.value !== 'auto') return;
+  const url = urlEl.value.trim();
+  if(!url){ sel.value = 'auto'; updatePwCommand(); return; }
+  const match = PW_PLATFORM_PATTERNS.find(p => p.rx.test(url));
+  sel.value = match ? match.val : 'auto';
+  savePwPersist();
+  updatePwCommand();
+}
+
+/* ── PLAYWRIGHT FILENAME GENERATOR ─────────────────────────────────────── */
+function buildPwFilename(){
+  const sel       = document.getElementById('pw-platform-sel');
+  const platform  = (sel && sel.value !== 'auto') ? sel.value : 'scan';
+  const now       = new Date();
+  const dd  = String(now.getDate()).padStart(2,'0');
+  const mm  = String(now.getMonth()+1).padStart(2,'0');
+  const yy  = String(now.getFullYear()).slice(-2);
+  const hh  = String(now.getHours()).padStart(2,'0');
+  const min = String(now.getMinutes()).padStart(2,'0');
+  return `${platform}-${dd}-${mm}-${yy}-${hh}-${min}.json`;
+}
+
+/* ── PLAYWRIGHT COMMAND BUILDER ─────────────────────────────────────────── */
 function updatePwCommand(){
-  const url     = (document.getElementById('pw-url-input')  || {value:''}).value.trim();
-  const scrolls = (document.getElementById('pw-scrolls')    || {value:'60'}).value.trim() || '60';
-  const out     = (document.getElementById('pw-out')        || {value:'kz_scan_results.json'}).value.trim() || 'kz_scan_results.json';
-  const display = document.getElementById('pw-cmd-display');
+  const url      = (document.getElementById('pw-url-input')  ||{value:''}).value.trim();
+  const scrolls  = (document.getElementById('pw-scrolls')    ||{value:'60'}).value.trim() || '60';
+  const outDir   = (document.getElementById('pw-out-dir')    ||{value:''}).value.trim();
+  const kzDir    = (document.getElementById('pw-kz-dir')     ||{value:''}).value.trim();
+  const display  = document.getElementById('pw-cmd-display');
+  const outInput = document.getElementById('pw-out');
+  const kzHint   = document.getElementById('pw-kzdir-hint');
   if(!display) return;
+
+  // Build auto filename
+  const filename = buildPwFilename();
+  if(outInput) outInput.value = filename;
+
+  // Determine full output path
+  const sep = outDir && outDir.includes('/') ? '/' : '\\';
+  const outPath = outDir
+    ? (outDir.replace(/[/\\]+$/,'') + sep + filename)
+    : filename;
+
+  // Build the command
   const urlPart = url || 'https://...';
-  display.innerHTML =
-    `python kz_scanner.py "${urlPart}" --scrolls ${scrolls} --out ${out}` +
+  let cmd;
+  if(kzDir){
+    // cd to kzDir first so the script is always found, then run
+    const cdCmd  = `cd /d "${kzDir.replace(/[/\\]+$/,'')}"`;
+    const runCmd = `python kz_scanner.py "${urlPart}" --scrolls ${scrolls} --out "${outPath}"`;
+    cmd = `${cdCmd} && ${runCmd}`;
+    if(kzHint) kzHint.style.display = '';
+  } else {
+    cmd = `python kz_scanner.py "${urlPart}" --scrolls ${scrolls} --out "${outPath}"`;
+    if(kzHint) kzHint.style.display = 'none';
+  }
+
+  display.innerHTML = escHtml(cmd) +
     `<button class="code-copy" onclick="copyCode(this)">Copy</button>`;
 }
 
