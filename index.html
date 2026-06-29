@@ -612,6 +612,32 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
 .bridge-dot.checking{background:var(--warn-text);animation:pulse .9s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
+/* ─── HELP SUB-TABS ──────────────────────────────────────── */
+.help-sub-tabs{
+  display:flex;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.25rem;
+  gap:0;
+}
+.help-sub-tab{
+  padding:9px 20px;
+  font-size:13px;font-weight:500;
+  background:none;border:none;
+  border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;
+  transition:color .15s,border-color .15s;
+  margin-bottom:-1px;
+}
+:root[data-theme="dark"]  .help-sub-tab        { color:#a0a1a8; }
+:root[data-theme="light"] .help-sub-tab        { color:#3a3b44; }
+:root[data-theme="dark"]  .help-sub-tab:hover  { color:#d8d9de; }
+:root[data-theme="light"] .help-sub-tab:hover  { color:#0d0e12; }
+:root[data-theme="dark"]  .help-sub-tab.active { color:#00d9b8; border-bottom-color:#00d9b8; }
+:root[data-theme="light"] .help-sub-tab.active { color:#006657; border-bottom-color:#006657; }
+
+.help-sub-panel{display:none}
+.help-sub-panel.active{display:block}
+
 </style>
 </head>
 <body>
@@ -657,7 +683,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
     <button class="nav-tab" onclick="switchTab('presets',this)">⭐ Presets</button>
     <button class="nav-tab" onclick="switchTab('scanner',this)">🔍 Scanner</button>
     <button class="nav-tab" onclick="switchTab('options',this)">⚙️ Settings</button>
-    <button class="nav-tab" onclick="switchTab('setup',this)">📦 Setup Guide</button>
+    <button class="nav-tab" onclick="switchTab('setup',this)">❓ Help</button>
   </nav>
 
   <!-- PLATFORM BANNER -->
@@ -990,7 +1016,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
               <div class="step-num">2</div>
               <div class="step-body">
                 <div class="step-title">Download kz_scanner.py</div>
-                <div class="step-desc">Save it in the same folder as KZ Downloader. <a href="#" onclick="downloadKzScanner();return false" style="font-weight:600">⬇ Download kz_scanner.py</a></div>
+                <div class="step-desc">Save it in the same folder as KZ Downloader. <a href="https://www.mediafire.com/file/26bwb82iipgktig/kz_scanner.py/file" target="_blank" rel="noopener" style="font-weight:600">⬇ Download kz_scanner.py</a></div>
               </div>
             </div>
 
@@ -1154,9 +1180,53 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
   </div>
 
   <!-- ═══════════════════════════════════════════
-       TAB 4 · SETUP GUIDE
+       TAB 4 · HELP
   ══════════════════════════════════════════════ -->
   <div class="panel" id="panel-setup">
+
+    <!-- ── HELP SUB-TAB BAR ── -->
+    <nav class="help-sub-tabs">
+      <button class="help-sub-tab active" onclick="switchHelpTab('about',this)">📄 About</button>
+      <button class="help-sub-tab" onclick="switchHelpTab('setup',this)">⚙️ Setup Guide</button>
+      <button class="help-sub-tab" onclick="switchHelpTab('start',this)">🚀 Getting Started</button>
+    </nav>
+
+    <!-- ══════════════════════════════════════
+         HELP SUB-PANEL 1 · ABOUT
+    ═══════════════════════════════════════════ -->
+    <div class="help-sub-panel active" id="help-about">
+
+      <div class="card">
+        <div class="card-title">About</div>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.75;margin-bottom:.75rem">
+          <strong style="color:var(--text)">KZ Downloader</strong> is a browser-based GUI that generates ready-to-run
+          <a href="https://github.com/yt-dlp/yt-dlp" target="_blank">yt-dlp</a> commands — no command-line knowledge required.
+          Paste any YouTube channel, Instagram profile, Facebook page, LinkedIn company page, Twitter/X account, TikTok video,
+          or any URL that yt-dlp supports, configure your preferred format and output folder, and the app instantly assembles
+          the correct download command for you to copy or run.
+        </p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.75;margin-bottom:.75rem">
+          The app runs entirely in your browser — nothing is uploaded or stored on a server. All profiles, settings, history,
+          and presets are saved in your browser's <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px">localStorage</code>,
+          scoped to your device. The actual downloading is performed by yt-dlp on your own machine; KZ Downloader is purely a
+          command-builder and queue manager.
+        </p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.75">
+          Use the <strong style="color:var(--text)">Profiles</strong> tab to add URLs and generate commands,
+          <strong style="color:var(--text)">History</strong> to search and re-queue past downloads,
+          <strong style="color:var(--text)">Presets</strong> to save channel shortcuts,
+          <strong style="color:var(--text)">Scanner</strong> to discover media on any page (including login-gated pages via the Playwright mode),
+          and <strong style="color:var(--text)">Settings</strong> to configure format, quality, output path, filename template, and extra yt-dlp flags.
+          The device selector in the top-right corner adapts the generated commands and interface to Windows, macOS, Linux, Android (Termux), or iOS.
+        </p>
+      </div>
+
+    </div><!-- /help-about -->
+
+    <!-- ══════════════════════════════════════
+         HELP SUB-PANEL 2 · SETUP GUIDE
+    ═══════════════════════════════════════════ -->
+    <div class="help-sub-panel" id="help-setup">
 
     <div class="card">
       <div class="card-title">Operating System</div>
@@ -1449,7 +1519,124 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
       </div>
     </div>
 
-  </div><!-- /setup panel -->
+    </div><!-- /help-setup -->
+
+    <!-- ══════════════════════════════════════
+         HELP SUB-PANEL 3 · GETTING STARTED
+    ═══════════════════════════════════════════ -->
+    <div class="help-sub-panel" id="help-start">
+
+    <!-- ── SEGMENT 3: GETTING STARTED ── -->
+
+    <div class="card">
+      <div class="card-title">Your first download — step by step</div>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Complete the one-time setup</div>
+          <div class="step-desc">
+            Follow the <strong>Setup Guide</strong> above for your operating system to install Python, FFmpeg, and yt-dlp.
+            You only need to do this once. To confirm everything is ready, run:
+          </div>
+          <div class="code-block">python -m yt_dlp --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc">If you see a version number, you're ready to go.</div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Select your device</div>
+          <div class="step-desc">
+            Use the device selector in the top-right corner of the app to choose your OS
+            (<strong>Windows</strong>, <strong>Mac</strong>, <strong>Linux</strong>, <strong>Android</strong>, or <strong>iOS</strong>).
+            KZ Downloader auto-detects your device on first load, but you can switch at any time.
+            The generated commands, action buttons, and output path defaults all update automatically.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Configure your settings (optional)</div>
+          <div class="step-desc">
+            Go to the <strong>Settings</strong> tab and set your preferred output folder, video format/quality, and filename template.
+            These settings persist across sessions. Common choices:
+          </div>
+          <div class="step-desc">
+            <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px">Best (video + audio)</code> — highest quality, requires FFmpeg for merging.<br />
+            <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px">1080p max</code> — cap at 1080p; good balance of quality and file size.<br />
+            <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px">Audio only (best)</code> — extract audio only, no video.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Add a URL in the Profiles tab</div>
+          <div class="step-desc">
+            Go to the <strong>Profiles</strong> tab. Paste any supported URL — a YouTube channel, an Instagram profile,
+            a single video, or any page yt-dlp supports — into the input field and click <strong>+ Add</strong>.
+            The platform is detected automatically and shown as a coloured badge.
+          </div>
+          <div class="step-desc">
+            You can add multiple URLs at once; they queue up and are included in a single generated command.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Copy or run the generated command</div>
+          <div class="step-desc">
+            The generated yt-dlp command appears instantly in the <strong>Generated command</strong> panel below the queue.
+            From here you can:
+          </div>
+          <div class="step-desc">
+            <strong>📋 Copy</strong> — copy the command to your clipboard and paste it into your terminal or Termux.<br />
+            <strong>⬇ Download file</strong> — save as a <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px">.bat</code> (Windows) or shell script to run later.<br />
+            <strong>▶ Launch in CMD</strong> — (Windows only) opens a CMD window and runs the command immediately.
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-title">Run the command and find your downloads</div>
+          <div class="step-desc">
+            Paste or run the command in your terminal. yt-dlp will begin downloading videos to the output folder
+            you configured in Settings. Progress prints to the terminal — you can close it once it finishes.
+          </div>
+          <div class="notice notice-ok" style="margin-top:.5rem">
+            Downloads land in your configured output folder. On Windows the default is
+            <code style="background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px;font-size:11px">D:/KZ Downloads</code>;
+            on Android it's <code style="background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px;font-size:11px">/sdcard/Download/KZ Downloads</code>.
+            Change this any time in <strong>Settings → Output folder</strong>.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /getting started card -->
+
+    <div class="card">
+      <div class="card-title">Tips &amp; common questions</div>
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:12px;color:var(--text-sec);line-height:1.7">
+        <div><strong style="color:var(--text)">LinkedIn / private Instagram:</strong> These require an authenticated session. Enable <em>Use cookies (Chrome)</em> in Settings → Extra flags, or use the <strong>Scanner → Playwright</strong> tab for a persistent login session.</div>
+        <div><strong style="color:var(--text)">Downloading a single video vs. a full channel:</strong> Paste the video URL directly for a single video. For a full channel, paste the channel or profile URL — yt-dlp will fetch every video automatically. Use the <em>Date limit</em> in Settings to restrict by upload date.</div>
+        <div><strong style="color:var(--text)">Saving presets:</strong> Go to the <strong>Presets</strong> tab to save frequently used channels. Click any preset to instantly add it to the queue without re-pasting the URL.</div>
+        <div><strong style="color:var(--text)">Exporting history:</strong> Every URL and command you generate is logged in the <strong>History</strong> tab. Use <em>Export selected</em> to save a backup, or <em>Re-queue</em> to push an old entry back into Profiles.</div>
+        <div><strong style="color:var(--text)">Updating yt-dlp:</strong> Sites change their formats regularly — keep yt-dlp up to date. Run <code style="background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 4px;font-family:'Courier New',monospace;font-size:11px">python -m pip install -U yt-dlp</code> periodically to get the latest version.</div>
+      </div>
+    </div>
+
+    </div><!-- /help-start -->
+
+  </div><!-- /help panel -->
 
 </div><!-- /app-wrap -->
 
@@ -1459,6 +1646,14 @@ let profiles = [];
 let activeFlags = new Set();
 let outTab = 'terminal';
 let currentDevice = 'windows'; // 'windows' | 'mac' | 'linux' | 'android' | 'ios'
+
+/* ─── HELP SUB-TABS ───────────────────────────────────────── */
+function switchHelpTab(id, btn){
+  document.querySelectorAll('.help-sub-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.help-sub-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('help-' + id).classList.add('active');
+}
 
 /* ─── STORAGE ─────────────────────────────────────────────── */
 const STORAGE_KEY  = 'kz-downloader-profiles';

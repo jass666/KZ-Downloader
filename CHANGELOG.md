@@ -8,6 +8,36 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v3.7 — Fix + UX: Scanner Download Link + Help Sub-Tabs
+**Date:** 29-06-2026
+
+### Fixed
+
+**`kz_scanner.py` download link was a broken stub** — the `⬇ Download kz_scanner.py` link in the Scanner → Playwright → One-time setup (Step 2) previously called `downloadKzScanner()`, which generated a local blob containing only a placeholder comment. The link now points directly to the hosted file on MediaFire (`https://www.mediafire.com/file/26bwb82iipgktig/kz_scanner.py/file`) and opens in a new tab. The `onclick` stub and `downloadKzScanner()` function are no longer used for this link.
+
+### Changed
+
+**Help panel refactored from scrolling sections to horizontal sub-tabs** — the `❓ Help` panel previously rendered three sections (About, Setup Guide, Getting Started) stacked vertically, separated by `<hr>` dividers and uppercase plain-text labels. These are now presented as a horizontal sub-tab bar (`📄 About`, `⚙️ Setup Guide`, `🚀 Getting Started`) matching the same underline-active style as the main nav tabs. Only the active sub-panel is visible at a time, reducing scroll depth and improving discoverability.
+
+#### Implementation details
+
+**`.help-sub-tabs`** — flex row container for the three sub-tab buttons, with a bottom border matching the main nav style.
+
+**`.help-sub-tab`** — individual tab button; inherits the same active/hover colour rules (teal underline in dark mode, dark green in light mode) as `.nav-tab`.
+
+**`.help-sub-panel`** — wrapper for each section's content; `display:none` by default, `display:block` when `.active`.
+
+**`switchHelpTab(id, btn)`** — removes `.active` from all `.help-sub-tab` and `.help-sub-panel` elements, then activates the clicked button and the matching `#help-{id}` panel.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | Scanner Step 2 download link changed from blob stub to direct MediaFire URL; Help panel HTML restructured into three `.help-sub-panel` divs under a `.help-sub-tabs` nav; CSS for `.help-sub-tabs`, `.help-sub-tab`, `.help-sub-panel` added; `switchHelpTab()` function added |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v3.6 — Feature: Playwright Scanner — Collapsible Setup + Enhanced Run Options
 **Date:** 29-06-2026
 
