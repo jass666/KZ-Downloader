@@ -8,6 +8,61 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v3.0 — Fix: Media Scanner Deep Extraction + UI Polish
+**Date:** 29-06-2026
+
+### Fixed
+
+**Scanner returned single stale PLATFORM result** — the root cause of the scanner being non-functional. `scanMedia()` had an early-exit block: if the pasted URL matched any entry in `SCAN_PLATFORMS`, the function immediately rendered one fake `{type:'PLATFORM'}` result and returned without fetching anything. For any YouTube, Instagram, Facebook, Twitter/X, LinkedIn, Vimeo, TikTok, Twitch, SoundCloud, or Dailymotion URL, the actual page was never scanned. The short-circuit is removed entirely. All URLs now go through the full proxy fetch and extraction pipeline.
+
+**`extractMediaItems()` was blind to modern pages** — the extractor only checked `<video src>`, `<audio src>`, `<source src>`, `<a href>` with media extensions, and `og:video` / `og:audio` meta tags. Modern sites deliver media URLs inside JS strings, inline JSON, JSON-LD blocks, lazy-load attributes, and iframe embeds — none of which were covered. The function signature changed from `(doc, baseUrl)` to `(doc, rawHtml, baseUrl)` to enable raw-string grepping alongside DOM parsing.
+
+Extraction now covers seven source layers:
+
+| Layer | What it catches |
+|---|---|
+| 1 · Semantic HTML5 | `<video src>`, `<audio src>`, `<source src>` |
+| 2 · Lazy-load attributes | `data-src`, `data-video`, `data-url`, `data-media`, `data-mp4`, `data-stream` with media extensions |
+| 3 · Anchor links | `<a href>` ending in `.mp4 .webm .m4v .mov .avi .mkv .mp3 .m4a .ogg .flac .wav` |
+| 4 · OpenGraph / Twitter Card meta | `og:video`, `og:video:url`, `og:video:secure_url`, `og:audio`, `twitter:player:stream`; `og:url` only if it matches a known platform |
+| 5 · JSON-LD structured data | Walks `application/ld+json` blocks; extracts `contentUrl`, `embedUrl`, `url`, `thumbnailUrl` where value matches a media extension or known platform |
+| 6 · Raw HTML grep | Regex over the full proxy response string; finds quoted `.mp4/.webm/etc.` URLs in JS blobs and platform-specific video URLs embedded in script text |
+| 7 · iframe embed players | `<iframe src>` where src matches a known platform or contains `embed` / `player` / `video` |
+
+**PLATFORM type promotion centralised** — previously scattered across caller sites with inconsistent logic. Now handled inside `push()` in `extractMediaItems()`: any resolved URL that matches `SCAN_PLATFORMS` is unconditionally promoted to `PLATFORM` type regardless of which extraction layer found it.
+
+**Single proxy, no fallback** — if `allorigins.win` failed, the scanner showed an error with no retry. A second proxy (`corsproxy.io`) is now tried automatically on any non-timeout failure. If both proxies fail and the URL is a known platform, the URL itself is surfaced as a PLATFORM entry so the user can still add it to the queue.
+
+**Fetch timeout too short** — `AbortController` timeout raised from 10 s to 15 s to accommodate slow proxy responses.
+
+**Safety cap on raw HTML grepping** — regex loops over the full HTML string break early at 200 accumulated items to prevent blocking the main thread on very large pages.
+
+### Changed
+
+**Result cap raised from 20 → 30** — `.slice(0, 20)` updated to `.slice(0, 30)`; truncation notice threshold updated to match.
+
+**Scanner and Settings tabs swapped positions** — Scanner moved to position 4 (before Settings) so the two utility tabs appear in logical usage order: Scanner to discover content → Settings to configure output.
+
+| Position | Before | After |
+|---|---|---|
+| 4th | ⚙️ Settings | 🔍 Scanner |
+| 5th | 🔍 Scanner | ⚙️ Settings |
+
+### Added
+
+**"Settings" tab label** — Options tab renamed to Settings in the nav.
+
+**Clear queue button in profile queue card header** — a compact 🗑 Clear button added to the top-right of the Profile queue card (alongside the ✓ SAVED indicator), giving one-tap access to `clearAll()` without scrolling to the action row below the terminal output.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `KZ-Downloader.html` | `scanMedia()` early-exit removed; dual-proxy fallback with timeout bump; `extractMediaItems()` signature updated, 7-layer extraction added; `push()` centralises PLATFORM promotion; result cap raised to 30; Options nav tab renamed to Settings; Scanner and Settings nav tabs swapped positions; Clear button added in queue card header |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v2.9 — Fix: Media Scanner Correctness & Robustness
 **Date:** 29-06-2026
 

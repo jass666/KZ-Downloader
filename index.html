@@ -517,6 +517,46 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
   vertical-align:middle;margin-right:7px;flex-shrink:0;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* Scanner mode toggle */
+.scan-mode-tabs{display:flex;gap:0;border:1px solid var(--border-str);border-radius:8px;overflow:hidden;margin-bottom:.875rem}
+.scan-mode-tab{flex:1;padding:8px 10px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;text-align:center}
+.scan-mode-tab:not(:last-child){border-right:1px solid var(--border-str)}
+:root[data-theme="dark"]  .scan-mode-tab        { background:#202226; color:#8a8b92; }
+:root[data-theme="light"] .scan-mode-tab        { background:#dddee3; color:#555760; }
+:root[data-theme="dark"]  .scan-mode-tab:hover  { background:#2a2b30; color:#c8c9ce; }
+:root[data-theme="light"] .scan-mode-tab:hover  { background:#c8c9d0; color:#1a1b1e; }
+:root[data-theme="dark"]  .scan-mode-tab.active { background:#004d44; color:#00e8c8; border-bottom:2px solid #00d9b8;}
+:root[data-theme="light"] .scan-mode-tab.active { background:#006657; color:#fff; border-bottom:2px solid #004840;}
+
+/* Playwright command box */
+.pw-cmd-block{
+  background:var(--term-bg);border:1px solid #333;border-radius:7px;
+  font-size:12px;font-family:'Courier New',monospace;
+  color:#c8faf4;line-height:1.75;padding:.6rem 3.5rem .6rem .9rem;
+  position:relative;white-space:pre-wrap;word-break:break-all;margin-bottom:8px;
+}
+.pw-import-zone{
+  border:2px dashed var(--border-str);border-radius:9px;
+  padding:1.4rem;text-align:center;cursor:pointer;
+  transition:all .15s;color:var(--text-muted);font-size:12px;
+  background:var(--surface2);
+}
+.pw-import-zone:hover,.pw-import-zone.drag-over{
+  border-color:var(--accent-bdr);background:var(--accent-dim);color:var(--accent-text);
+}
+.pw-import-zone .pw-icon{font-size:28px;margin-bottom:6px;display:block;opacity:.6}
+.bridge-status{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:7px;font-size:12px;
+  background:var(--surface2);border:1px solid var(--border);margin-bottom:.75rem;
+}
+.bridge-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bridge-dot.ok{background:#00c878;box-shadow:0 0 6px #00c878}
+.bridge-dot.off{background:#555}
+.bridge-dot.checking{background:var(--warn-text);animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 </style>
 </head>
 <body>
@@ -837,25 +877,147 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
   ══════════════════════════════════════════════ -->
   <div class="panel" id="panel-scanner">
 
-    <div class="card">
-      <div class="card-title">Scan a page for media</div>
-      <div class="profile-row">
-        <input type="text" id="scanner-input"
-          placeholder="https://example.com/page-with-videos"
-          onkeydown="if(event.key==='Enter')scanMedia()" />
-        <button class="btn btn-accent" onclick="scanMedia()">🔍 Scan</button>
-      </div>
-      <div class="notice notice-info">
-        Paste any page URL to extract video, audio, and media links. Known platforms (YouTube, TikTok, Instagram, etc.) are detected instantly — other pages are fetched via a CORS proxy.
+    <!-- Mode toggle -->
+    <div class="scan-mode-tabs">
+      <button class="scan-mode-tab active" id="smt-proxy"     onclick="setScanMode('proxy',this)">🌐 Quick Scan <span style="font-size:10px;opacity:.7">(CORS proxy)</span></button>
+      <button class="scan-mode-tab"        id="smt-playwright" onclick="setScanMode('playwright',this)">🎭 Playwright <span style="font-size:10px;opacity:.7">(login-aware)</span></button>
+      <button class="scan-mode-tab"        id="smt-bridge"     onclick="setScanMode('bridge',this)">🔌 Live Bridge <span style="font-size:10px;opacity:.7">(local server)</span></button>
+    </div>
+
+    <!-- ── MODE: PROXY ── -->
+    <div id="scan-pane-proxy">
+      <div class="card">
+        <div class="card-title">Quick page scan</div>
+        <div class="profile-row">
+          <input type="text" id="scanner-input"
+            placeholder="https://example.com/page-with-videos"
+            onkeydown="if(event.key==='Enter')scanMedia()" />
+          <button class="btn btn-accent" onclick="scanMedia()">🔍 Scan</button>
+        </div>
+        <div class="notice notice-warn" style="margin-top:.5rem">
+          ⚠️ Works for <strong>public pages with static HTML</strong> (YouTube, generic sites).
+          <strong>LinkedIn, Instagram, and Facebook require login</strong> — use 🎭 Playwright mode for those.
+        </div>
       </div>
     </div>
 
+    <!-- ── MODE: PLAYWRIGHT ── -->
+    <div id="scan-pane-playwright" style="display:none">
+      <div class="card">
+        <div class="card-title">Playwright scanner — setup</div>
+        <div class="step-desc" style="margin-bottom:.75rem">
+          The Playwright scanner runs <strong>locally on your machine</strong>, opens a real browser
+          with your login session, scrolls the page, and exports a JSON file you import here.
+          Supports LinkedIn, Instagram, Facebook, and any login-gated page.
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Install dependencies (one-time)</div>
+            <div class="pw-cmd-block">pip install playwright<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="pw-cmd-block">playwright install chromium<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step" style="margin-top:.75rem">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Download kz_scanner.py</div>
+            <div class="step-desc">Save it in the same folder as KZ Downloader. <a href="#" onclick="downloadKzScanner();return false" style="font-weight:600">⬇ Download kz_scanner.py</a></div>
+          </div>
+        </div>
+
+        <div class="setup-step" style="margin-top:.75rem">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Run the scanner</div>
+            <div class="step-desc">Replace the URL with your target page. The browser will open — log in if needed, then press Enter in the terminal.</div>
+            <div style="margin-bottom:6px">
+              <div class="opt-label" style="margin-bottom:4px">Target URL</div>
+              <input type="text" id="pw-url-input" placeholder="https://www.linkedin.com/company/yourcompany/posts/?feedView=videos" style="width:100%;margin-bottom:6px" oninput="updatePwCommand()" />
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <div style="flex:1">
+                <div class="opt-label">Scrolls</div>
+                <input type="text" id="pw-scrolls" value="60" style="width:100%" oninput="updatePwCommand()" />
+              </div>
+              <div style="flex:1">
+                <div class="opt-label">Output file</div>
+                <input type="text" id="pw-out" value="kz_scan_results.json" style="width:100%" oninput="updatePwCommand()" />
+              </div>
+            </div>
+            <div class="opt-label">Generated command</div>
+            <div class="pw-cmd-block" id="pw-cmd-display">python kz_scanner.py "https://..." --scrolls 60<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step" style="margin-top:.75rem">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Import the results JSON</div>
+            <div class="step-desc">When the scan finishes, import the output file below.</div>
+            <div class="pw-import-zone" id="pw-drop-zone"
+              onclick="document.getElementById('pw-json-file').click()"
+              ondragover="event.preventDefault();this.classList.add('drag-over')"
+              ondragleave="this.classList.remove('drag-over')"
+              ondrop="handlePwDrop(event)">
+              <span class="pw-icon">📂</span>
+              <strong>Click to open</strong> or drag &amp; drop <code>kz_scan_results.json</code> here
+            </div>
+            <input type="file" id="pw-json-file" accept=".json" style="display:none" onchange="importPwJson(event)" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MODE: BRIDGE ── -->
+    <div id="scan-pane-bridge" style="display:none">
+      <div class="card">
+        <div class="card-title">Live bridge — import directly from running scanner</div>
+        <div class="step-desc" style="margin-bottom:.75rem">
+          Run kz_scanner.py with <code>--serve</code> and it starts a local HTTP server.
+          KZ Downloader can then import results without any file step.
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Run scanner with --serve</div>
+            <div class="pw-cmd-block">python kz_scanner.py "https://www.linkedin.com/company/..." --serve<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc" style="margin-top:4px">The scanner will print: <code>Local bridge started — http://localhost:7474/results</code></div>
+          </div>
+        </div>
+
+        <div class="setup-step" style="margin-top:.75rem">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Check connection &amp; import</div>
+            <div class="bridge-status" id="bridge-status-box">
+              <div class="bridge-dot off" id="bridge-dot"></div>
+              <span id="bridge-status-text">Not connected — run kz_scanner.py --serve first</span>
+            </div>
+            <div class="action-row" style="margin-top:.5rem">
+              <button class="btn" onclick="checkBridge()">↻ Check connection</button>
+              <button class="btn btn-accent" onclick="importFromBridge()">⬇ Import results</button>
+              <div>
+                <div class="opt-label" style="display:inline;margin-right:6px">Port</div>
+                <input type="text" id="bridge-port" value="7474" style="width:70px;display:inline-block" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SHARED STATUS + RESULTS ── -->
     <div id="scan-status"></div>
 
     <div id="scan-results-wrap" style="display:none">
       <div class="card">
         <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
           <span>Found media <span class="badge" id="scan-count">0</span></span>
+          <span id="scan-source-label" style="font-size:10px;color:var(--text-muted)"></span>
         </div>
         <div class="profile-list" id="scan-list"></div>
         <div id="scan-truncation-notice"></div>
@@ -2005,15 +2167,132 @@ const SCAN_PLATFORMS = [
   { rx:/dailymotion\.com/,          dot:'gen' },
 ];
 
-// Fix: define label map locally — never rely on an external platLabel variable
 const SCAN_PLAT_LABEL = {yt:'YouTube', ig:'Instagram', fb:'Facebook', li:'LinkedIn', tw:'Twitter/X'};
-
 const SCAN_MEDIA_EXTS = /\.(mp4|webm|m4v|mov|avi|mkv|mp3|m4a|ogg|flac|wav)(\?[^"']*)?$/i;
 
-let scanResults = []; // session-only; no localStorage
+let scanResults = [];
+let currentScanMode = 'proxy';
 
-// Fix: resolve dot safely from SCAN_PLATFORMS, never delegate to detectPlatform()
-// (avoids coupling to whatever format detectPlatform() returns)
+/* ── SCAN MODE TOGGLE ──────────────────────────────────────────────────── */
+function setScanMode(mode, el){
+  currentScanMode = mode;
+  document.querySelectorAll('.scan-mode-tab').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  ['proxy','playwright','bridge'].forEach(m => {
+    const pane = document.getElementById('scan-pane-'+m);
+    if(pane) pane.style.display = (m === mode) ? '' : 'none';
+  });
+  // Clear shared results when switching mode
+  document.getElementById('scan-status').innerHTML = '';
+  document.getElementById('scan-results-wrap').style.display = 'none';
+  if(mode === 'playwright') updatePwCommand();
+  if(mode === 'bridge') checkBridge();
+}
+
+/* ── PLAYWRIGHT COMMAND BUILDER ────────────────────────────────────────── */
+function updatePwCommand(){
+  const url     = (document.getElementById('pw-url-input')  || {value:''}).value.trim();
+  const scrolls = (document.getElementById('pw-scrolls')    || {value:'60'}).value.trim() || '60';
+  const out     = (document.getElementById('pw-out')        || {value:'kz_scan_results.json'}).value.trim() || 'kz_scan_results.json';
+  const display = document.getElementById('pw-cmd-display');
+  if(!display) return;
+  const urlPart = url || 'https://...';
+  display.innerHTML =
+    `python kz_scanner.py "${urlPart}" --scrolls ${scrolls} --out ${out}` +
+    `<button class="code-copy" onclick="copyCode(this)">Copy</button>`;
+}
+
+/* ── PLAYWRIGHT JSON IMPORT ────────────────────────────────────────────── */
+function handlePwDrop(e){
+  e.preventDefault();
+  document.getElementById('pw-drop-zone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if(file) processPwJsonFile(file);
+}
+
+function importPwJson(e){
+  const file = e.target.files[0];
+  if(file) processPwJsonFile(file);
+  e.target.value = '';
+}
+
+function processPwJsonFile(file){
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      // Accept both {items:[...]} wrapper (kz_scanner output) and raw array
+      const rawItems = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : null);
+      if(!rawItems) throw new Error('Unrecognised format — expected {items:[...]} or plain array');
+      // Normalise items: ensure dot, type, url
+      const items = rawItems.filter(it => it && it.url).map(it => ({
+        type:     it.type     || 'PLATFORM',
+        url:      it.url,
+        dot:      it.dot      || scanDot(it.url),
+        platform: it.platform || '',
+        source:   it.source   || 'playwright_import',
+      }));
+      const sourceLabel = data.source_url
+        ? `Playwright · ${data.platform || ''} · ${items.length} items`
+        : `JSON import · ${items.length} items`;
+      document.getElementById('scan-status').innerHTML = '';
+      renderScanResults(items, items.length, sourceLabel);
+    } catch(err){
+      document.getElementById('scan-status').innerHTML =
+        `<div class="notice notice-warn">Import failed: ${escHtml(err.message)}</div>`;
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ── BRIDGE MODE ───────────────────────────────────────────────────────── */
+let bridgePollTimer = null;
+
+function bridgeUrl(){
+  const port = (document.getElementById('bridge-port') || {value:'7474'}).value || '7474';
+  return `http://localhost:${port}`;
+}
+
+function checkBridge(){
+  const dot  = document.getElementById('bridge-dot');
+  const txt  = document.getElementById('bridge-status-text');
+  if(!dot || !txt) return;
+  dot.className = 'bridge-dot checking';
+  txt.textContent = 'Checking…';
+  fetch(bridgeUrl() + '/ping', {signal: AbortSignal.timeout(2500)})
+    .then(r => {
+      if(r.ok){ dot.className = 'bridge-dot ok'; txt.textContent = 'Connected — scanner is running'; }
+      else     { dot.className = 'bridge-dot off'; txt.textContent = 'Bridge responded with error'; }
+    })
+    .catch(() => { dot.className = 'bridge-dot off'; txt.textContent = 'Not connected — run kz_scanner.py --serve first'; });
+}
+
+function importFromBridge(){
+  const statusEl = document.getElementById('scan-status');
+  statusEl.innerHTML =
+    `<div class="notice notice-info" style="display:flex;align-items:center">` +
+    `<span class="scan-spinner"></span>Fetching from local bridge…</div>`;
+  fetch(bridgeUrl() + '/results', {signal: AbortSignal.timeout(5000)})
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => {
+      const rawItems = Array.isArray(data) ? data : (Array.isArray(data.items) ? data.items : null);
+      if(!rawItems) throw new Error('Invalid format');
+      const items = rawItems.filter(it => it && it.url).map(it => ({
+        type: it.type || 'PLATFORM', url: it.url,
+        dot: it.dot || scanDot(it.url), platform: it.platform || '', source: 'bridge',
+      }));
+      const label = `Bridge import · ${data.platform || ''} · ${items.length} items`;
+      statusEl.innerHTML = '';
+      renderScanResults(items, items.length, label);
+    })
+    .catch(err => {
+      statusEl.innerHTML =
+        `<div class="notice notice-warn">Bridge import failed: ${escHtml(err.message)}. ` +
+        `Is kz_scanner.py --serve running?</div>`;
+    });
+}
+
+/* ── PROXY SCANNER (unchanged logic, honest about limits) ──────────────── */
 function scanDot(url){
   return (SCAN_PLATFORMS.find(p => p.rx.test(url)) || {dot:'gen'}).dot;
 }
@@ -2022,20 +2301,28 @@ function scanMedia(){
   const url = (document.getElementById('scanner-input').value || '').trim();
   if(!url){ alert('Paste a URL first.'); return; }
 
+  // Warn early about login-gated platforms
+  const isGated = /linkedin\.com|instagram\.com|facebook\.com/i.test(url);
+  if(isGated){
+    document.getElementById('scan-status').innerHTML =
+      `<div class="notice notice-warn">⚠️ <strong>Login-gated platform detected.</strong> ` +
+      `The proxy scanner will likely get a login wall, not real content. ` +
+      `Switch to <strong>🎭 Playwright mode</strong> for LinkedIn, Instagram, and Facebook.</div>`;
+    // Still attempt — user may want to try anyway
+  }
+
   const statusEl = document.getElementById('scan-status');
   const wrapEl   = document.getElementById('scan-results-wrap');
-
-  // Show spinner, hide previous results
   wrapEl.style.display = 'none';
-  statusEl.innerHTML =
-    `<div class="notice notice-info" style="display:flex;align-items:center">` +
-    `<span class="scan-spinner"></span>Scanning page via proxy…</div>`;
+  if(!isGated){
+    statusEl.innerHTML =
+      `<div class="notice notice-info" style="display:flex;align-items:center">` +
+      `<span class="scan-spinner"></span>Scanning page via proxy…</div>`;
+  }
 
-  // 15-second fetch timeout via AbortController
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
 
-  // Try two proxies in sequence for resilience
   const proxyUrls = [
     'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
     'https://corsproxy.io/?' + encodeURIComponent(url),
@@ -2043,59 +2330,48 @@ function scanMedia(){
 
   function tryProxy(idx){
     if(idx >= proxyUrls.length){
-      // All proxies failed — still surface the URL itself as a PLATFORM entry if recognised
       const matched = SCAN_PLATFORMS.find(p => p.rx.test(url));
       if(matched){
         statusEl.innerHTML =
           `<div class="notice notice-warn">Proxy scan failed — page could not be fetched. ` +
-          `Showing the URL itself as a known platform entry you can add directly.</div>`;
-        renderScanResults([{type:'PLATFORM', url, dot: matched.dot}], 1);
+          `Showing the URL itself as a known platform entry you can add directly. ` +
+          `Use 🎭 Playwright mode for authenticated content.</div>`;
+        renderScanResults([{type:'PLATFORM', url, dot:matched.dot}], 1, 'proxy fallback');
       } else {
         statusEl.innerHTML =
-          `<div class="notice notice-warn">` +
-          `Could not scan this page. Try pasting the URL into the Profiles tab and using List mode to preview via yt-dlp instead.</div>`;
+          `<div class="notice notice-warn">Could not scan this page. ` +
+          `Try 🎭 Playwright mode or paste the URL into the Profiles tab and use List mode.</div>`;
         wrapEl.style.display = 'none';
       }
       return;
     }
-
     const proxyUrl = proxyUrls[idx];
     const isAllOrigins = proxyUrl.includes('allorigins');
-
-    fetch(proxyUrl, { signal: controller.signal })
-      .then(r => {
-        if(!r.ok) throw new Error('HTTP ' + r.status);
-        return isAllOrigins ? r.json() : r.text();
-      })
+    fetch(proxyUrl, {signal: controller.signal})
+      .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return isAllOrigins ? r.json() : r.text(); })
       .then(payload => {
-        // allorigins wraps in {contents:...}; corsproxy returns raw text
         const html = isAllOrigins
           ? (payload && typeof payload.contents === 'string' ? payload.contents : null)
           : (typeof payload === 'string' ? payload : null);
         if(!html) throw new Error('Empty response');
-
-        const doc   = new DOMParser().parseFromString(html, 'text/html');
-        const all   = extractMediaItems(doc, html, url);
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const all = extractMediaItems(doc, html, url);
         const total = all.length;
         statusEl.innerHTML = '';
-        renderScanResults(all.slice(0, 30), total);
+        renderScanResults(all.slice(0, 30), total, 'proxy');
       })
       .catch(err => {
         if(err.name === 'AbortError'){
-          // Timeout — don't try next proxy, just bail
           statusEl.innerHTML =
-            `<div class="notice notice-warn">Scan timed out. The page may block proxy access. Try yt-dlp directly.</div>`;
+            `<div class="notice notice-warn">Scan timed out. The page may block proxy access. ` +
+            `Try 🎭 Playwright mode instead.</div>`;
           wrapEl.style.display = 'none';
           return;
         }
-        // Proxy failed — try next
         tryProxy(idx + 1);
       });
   }
-
   tryProxy(0);
-
-  // Clear timeout when done (catch inside handles abort)
   setTimeout(() => clearTimeout(timer), 20000);
 }
 
@@ -2106,53 +2382,39 @@ function extractMediaItems(doc, rawHtml, baseUrl){
   function push(type, rawUrl){
     if(!rawUrl || typeof rawUrl !== 'string') return;
     rawUrl = rawUrl.trim();
-    // Strip JS/template noise
     if(rawUrl.startsWith('{{') || rawUrl.startsWith('<%') || rawUrl.length > 2000) return;
     let resolved;
     try { resolved = new URL(rawUrl, baseUrl).href; } catch(e){ return; }
     if(!resolved || seen.has(resolved)) return;
     seen.add(resolved);
-    // Promote to PLATFORM type if URL matches a known yt-dlp platform
     const platMatch = SCAN_PLATFORMS.find(p => p.rx.test(resolved));
     if(platMatch) type = 'PLATFORM';
     items.push({type, url: resolved, dot: platMatch ? platMatch.dot : scanDot(resolved)});
   }
 
-  // ── 1. Semantic HTML5 elements ────────────────────────────
   doc.querySelectorAll('video[src]').forEach(el => push('VIDEO', el.getAttribute('src')));
   doc.querySelectorAll('audio[src]').forEach(el => push('AUDIO', el.getAttribute('src')));
   doc.querySelectorAll('video source[src], audio source[src]').forEach(el => push('VIDEO', el.getAttribute('src')));
-
-  // ── 2. data-src / data-video / data-url lazy-load attributes ─
   doc.querySelectorAll('[data-src],[data-video],[data-url],[data-media],[data-mp4],[data-stream]').forEach(el => {
     ['data-src','data-video','data-url','data-media','data-mp4','data-stream'].forEach(attr => {
       const v = el.getAttribute(attr);
       if(v && SCAN_MEDIA_EXTS.test(v)) push('VIDEO', v);
     });
   });
-
-  // ── 3. <a href> with media extension ─────────────────────
   doc.querySelectorAll('a[href]').forEach(el => {
     const href = el.getAttribute('href');
     if(href && SCAN_MEDIA_EXTS.test(href)) push('FILE', href);
   });
-
-  // ── 4. OpenGraph / Twitter Card meta ─────────────────────
   doc.querySelectorAll('meta[property="og:video"],meta[property="og:video:url"],meta[name="twitter:player:stream"]').forEach(el => {
-    const c = el.getAttribute('content'); if(!c) return;
-    push('VIDEO', c);
+    const c = el.getAttribute('content'); if(c) push('VIDEO', c);
   });
   doc.querySelectorAll('meta[property="og:audio"]').forEach(el => {
-    const c = el.getAttribute('content'); if(!c) return;
-    push('AUDIO', c);
+    const c = el.getAttribute('content'); if(c) push('AUDIO', c);
   });
-  // og:url — only if it matches a known platform (canonical page URL)
   doc.querySelectorAll('meta[property="og:url"],meta[property="og:video:secure_url"]').forEach(el => {
     const c = el.getAttribute('content');
     if(c && SCAN_PLATFORMS.some(p => p.rx.test(c))) push('PLATFORM', c);
   });
-
-  // ── 5. JSON-LD structured data ────────────────────────────
   doc.querySelectorAll('script[type="application/ld+json"]').forEach(el => {
     try {
       const obj = JSON.parse(el.textContent || '');
@@ -2166,105 +2428,70 @@ function extractMediaItems(doc, rawHtml, baseUrl){
       walk(obj);
     } catch(e){}
   });
-
-  // ── 6. Raw HTML grep — media URLs in script tags and inline JSON ─
-  // This catches players that inject URLs via JS without putting them in HTML attributes.
   if(rawHtml && typeof rawHtml === 'string'){
-    // Match quoted/unquoted media file URLs
     const urlRe = /["'`]?(https?:\/\/[^"'`\s<>]{5,500}\.(?:mp4|webm|m4v|mov|avi|mkv|mp3|m4a|ogg|flac|wav)(?:\?[^"'`\s<>]*)?)/gi;
     let m;
-    while((m = urlRe.exec(rawHtml)) !== null){
-      push('VIDEO', m[1]);
-      if(items.length > 200) break; // safety cap on grepping
-    }
-
-    // Match platform URLs embedded in JS strings (e.g. embed iframes, player configs)
+    while((m = urlRe.exec(rawHtml)) !== null){ push('VIDEO', m[1]); if(items.length > 200) break; }
     const platUrlRe = /["'](https?:\/\/(?:(?:www\.)?youtube\.com\/(?:watch|embed|shorts|v\/)[^"'\s<>]{3,200}|youtu\.be\/[^"'\s<>]{5,50}|(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[^"'\s<>]{3,100}|(?:www\.)?facebook\.com\/(?:watch|video)[^"'\s<>]{3,200}|(?:www\.)?twitter\.com\/[^"'\s<>]{3,150}\/video\/[^"'\s<>]{1,50}|(?:www\.)?tiktok\.com\/@[^"'\s<>]{3,100}|vimeo\.com\/[0-9]{4,12}))['"]/gi;
-    while((m = platUrlRe.exec(rawHtml)) !== null){
-      push('PLATFORM', m[1]);
-      if(items.length > 200) break;
-    }
-
-    // iframe src pointing to known embed patterns
+    while((m = platUrlRe.exec(rawHtml)) !== null){ push('PLATFORM', m[1]); if(items.length > 200) break; }
     const iframeRe = /<iframe[^>]+src=["']([^"']+)["']/gi;
     while((m = iframeRe.exec(rawHtml)) !== null){
       const src = m[1];
-      if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player/i.test(src)){
-        push('PLATFORM', src);
-      }
+      if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player/i.test(src)) push('PLATFORM', src);
     }
   }
-
-  // ── 7. <iframe src> in parsed DOM (embed players) ─────────
   doc.querySelectorAll('iframe[src]').forEach(el => {
-    const src = el.getAttribute('src');
-    if(!src) return;
-    if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player|video/i.test(src)){
-      push('PLATFORM', src);
-    }
+    const src = el.getAttribute('src'); if(!src) return;
+    if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player|video/i.test(src)) push('PLATFORM', src);
   });
-
   return items;
 }
 
-function renderScanResults(items, totalFound){
-  scanResults = items;   // store capped set for addScannedItems
+/* ── RENDER RESULTS (shared across all scan modes) ─────────────────────── */
+function renderScanResults(items, totalFound, sourceLabel){
+  scanResults = items;
 
   const listEl  = document.getElementById('scan-list');
   const countEl = document.getElementById('scan-count');
   const truncEl = document.getElementById('scan-truncation-notice');
   const wrapEl  = document.getElementById('scan-results-wrap');
   const actEl   = document.getElementById('scan-action-row');
+  const srcLbl  = document.getElementById('scan-source-label');
 
   countEl.textContent = items.length;
+  if(srcLbl) srcLbl.textContent = sourceLabel || '';
   wrapEl.style.display = 'block';
 
   if(!items.length){
-    listEl.innerHTML =
-      `<div class="empty-state"><div class="empty-icon">🔍</div>No media found on this page.</div>`;
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div>No media found on this page.</div>`;
     truncEl.innerHTML = '';
     actEl.style.display = 'none';
     return;
   }
 
   listEl.innerHTML = items.map((item, i) => {
-    const displayUrl = item.url.length > 60
-      ? item.url.slice(0, 57) + '…'
-      : item.url;
-
-    // Type badge — PLATFORM reuses .plat-* for colour; others use .scan-type-*
+    const displayUrl = item.url.length > 60 ? item.url.slice(0, 57) + '…' : item.url;
     let typeBadge;
     if(item.type === 'PLATFORM'){
       typeBadge = `<span class="plat-badge plat-${item.dot}">PLATFORM</span>`;
     } else {
       typeBadge = `<span class="plat-badge scan-type-${item.type.toLowerCase()}">${item.type}</span>`;
     }
-
-    // Platform badge — shown for non-PLATFORM types when a known platform is detected
-    // (PLATFORM type already shows the platform colour on the type badge itself)
-    // Fix: use SCAN_PLAT_LABEL instead of undefined platLabel
     const platBadge = (item.type !== 'PLATFORM' && item.dot !== 'gen')
       ? `<span class="plat-badge plat-${item.dot}">${SCAN_PLAT_LABEL[item.dot] || item.dot}</span>`
       : '';
-
     return `<div class="profile-item">
       <input type="checkbox" class="hist-cb scan-cb" data-idx="${i}" checked />
-      ${typeBadge}
-      ${platBadge}
+      ${typeBadge}${platBadge}
       <span class="profile-url" title="${escHtml(item.url)}">${escHtml(displayUrl)}</span>
     </div>`;
   }).join('');
 
-  // Truncation notice
   if(totalFound > 30){
     truncEl.innerHTML =
       `<div class="notice notice-info" style="margin-top:.6rem;font-size:11px">` +
-      `Showing first 30 of ${totalFound} items found. ` +
-      `Run a yt-dlp flat-playlist scan for the full list.` +
-      `</div>`;
-  } else {
-    truncEl.innerHTML = '';
-  }
+      `Showing first 30 of ${totalFound} items. Use Playwright mode for complete export.</div>`;
+  } else { truncEl.innerHTML = ''; }
 
   actEl.style.display = '';
 }
@@ -2276,11 +2503,24 @@ function addScannedItems(addAll){
         const cb = document.querySelector(`.scan-cb[data-idx="${i}"]`);
         return cb && cb.checked;
       });
-
   if(!toAdd.length){ alert('No items selected.'); return; }
   toAdd.forEach(item => addToQueue(item.url));
-  // Fix: target Profiles tab by its onclick attribute, not by DOM position
   switchTab('profiles', document.querySelector('.nav-tab[onclick*="profiles"]'));
+}
+
+/* ── kz_scanner.py DOWNLOAD ─────────────────────────────────────────────── */
+// Embedded minimal stub — the real script is the kz_scanner.py file shipped alongside
+function downloadKzScanner(){
+  // Opens the bundled script content as a download. In production this would
+  // point to a hosted URL; in local file mode we generate a blob.
+  const notice = `# kz_scanner.py — download the full script from:\n` +
+    `# https://github.com/your-repo/kz-downloader  (replace with your host)\n` +
+    `# Or copy from the kz_scanner.py file shipped alongside KZ Downloader.\n`;
+  const blob = new Blob([notice], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kz_scanner.py';
+  a.click();
 }
 
 /* ─── END MEDIA SCANNER ────────────────────────────────────────────────── */
