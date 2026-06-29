@@ -1229,6 +1229,56 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
     <div class="help-sub-panel" id="help-setup">
 
     <div class="card">
+      <div class="card-title">⚡ Quick Install — Already have Python?</div>
+      <div class="step-desc" style="margin-bottom:.75rem">
+        If Python is already installed on your machine, skip the per-OS steps below.
+        Download <code>requirements.txt</code> and run two commands — that's it.
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Download requirements.txt</div>
+          <div class="step-desc">
+            <a href="https://www.mediafire.com/file/rs8rde8jdrt2p8z/requirements.txt/file" target="_blank" rel="noopener" style="font-weight:600">⬇ Download requirements.txt </a>
+            — save it anywhere in the system (preferably in the KZ Downloader folder) .
+          </div>
+        </div>
+      </div>
+
+      <div class="setup-step" style="margin-top:.75rem">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Install Python dependencies</div>
+          <div class="step-desc">Open a terminal in the folder where you saved the file and run:</div>
+          <div class="code-block">pip install -r requirements.txt<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc" style="margin-top:6px">Then set up the Playwright browser (needed for the Scanner tab):</div>
+          <div class="code-block">playwright install chromium<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+        </div>
+      </div>
+
+      <div class="setup-step" style="margin-top:.75rem">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Install FFmpeg (system-level — required)</div>
+          <div class="step-desc">FFmpeg cannot be installed via pip. Use the command for your OS:</div>
+          <div class="step-desc"><strong>Windows:</strong></div>
+          <div class="code-block">winget install ffmpeg<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc" style="margin-top:6px"><strong>macOS:</strong></div>
+          <div class="code-block">brew install ffmpeg<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc" style="margin-top:6px"><strong>Linux:</strong></div>
+          <div class="code-block">sudo apt install ffmpeg -y<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc" style="margin-top:6px"><strong>Android (Termux):</strong></div>
+          <div class="code-block">pkg install ffmpeg<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="step-desc" style="margin-top:6px">Confirm it worked:</div>
+          <div class="code-block">ffmpeg -version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          <div class="notice notice-ok" style="margin-top:8px">You're ready! Go to the Profiles tab, add a URL, and generate your first command.</div>
+        </div>
+      </div>
+
+    </div><!-- /quick install card -->
+
+    <div class="card">
       <div class="card-title">Operating System</div>
       <div class="os-tabs" id="setup-os-tabs">
         <button class="os-tab active" id="setup-os-windows" onclick="setOS('win',this)">Windows</button>

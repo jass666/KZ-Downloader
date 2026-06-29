@@ -8,6 +8,37 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v3.8 — Docs: requirements.txt + README Install Guide Update
+**Date:** 29-06-2026
+
+### Added
+
+**`requirements.txt`** — new file listing all pip-installable dependencies (`yt-dlp`, `playwright`) in one place. Includes inline comments covering the `playwright install chromium` post-install step and per-platform FFmpeg install commands (`winget`, `brew`, `apt`, `pkg`) with a confirm step (`ffmpeg -version`). FFmpeg is noted as a system dependency not installable via pip.
+
+### Changed
+
+**README install steps updated across all platforms** to reference `requirements.txt` instead of standalone `pip install yt-dlp` calls:
+
+| Section | Change |
+|---|---|
+| **Windows** | Step 2 now installs FFmpeg via `winget install ffmpeg`; Step 3 (new) runs `pip install -r requirements.txt` + `playwright install chromium` |
+| **macOS** | Homebrew block changed from `brew install python ffmpeg yt-dlp` to `brew install python ffmpeg`; Step 2 updated to `pip install -r requirements.txt` + `playwright install chromium` |
+| **Linux** | Step 2 now runs `pip install -r requirements.txt` + `playwright install chromium` after the `apt install ffmpeg` line |
+| **Android (Termux)** | Step 3 uses `pip install -r requirements.txt`; note added that Playwright won't run on Termux — yt-dlp installs and works normally |
+| **Playwright Scanner Prerequisites** | Replaced standalone `pip install playwright` with `pip install -r requirements.txt` |
+
+**File Structure table in README** updated to include `requirements.txt`.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `requirements.txt` | Created — yt-dlp and playwright dependencies with FFmpeg guidance in comments |
+| `README.md` | Install steps updated across Windows, macOS, Linux, Android, and Playwright sections; `requirements.txt` added to file structure table |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v3.7 — Fix + UX: Scanner Download Link + Help Sub-Tabs
 **Date:** 29-06-2026
 

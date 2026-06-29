@@ -43,6 +43,15 @@ Open the app at [kzdownloader.pages.dev](https://kzdownloader.pages.dev/). Paste
 
 ### 1. Check Python & install dependencies (one-time)
 
+> **Quick option — already have Python?** Download `requirements.txt` directly and run:
+> ```
+> pip install -r requirements.txt
+> playwright install chromium
+> ```
+> 📥 [Download requirements.txt from MediaFire](https://www.mediafire.com/file/rs8rde8jdrt2p8z/requirements.txt/file)
+>
+> This installs both `yt-dlp` and `playwright` in one shot. FFmpeg still needs a separate system install — see your OS section below.
+
 ---
 
 #### 🪟 Windows
@@ -61,12 +70,19 @@ python --version
 3. Run the installer — **check "Add Python to PATH"** before clicking Install
 4. Once installed, close and reopen your terminal, then re-run `python --version` to confirm
 
-**Step 2 — Install yt-dlp:**
+**Step 2 — Install FFmpeg:**
+
 ```cmd
-python -m pip install yt-dlp
+winget install ffmpeg
 ```
 
-> Need FFmpeg too? The **Setup Guide** tab inside the app walks through the full FFmpeg install and PATH setup.
+> No `winget`? Download manually from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html). The **Setup Guide** tab inside the app walks through the full PATH setup.
+
+**Step 3 — Install Python dependencies:**
+```cmd
+pip install -r requirements.txt
+playwright install chromium
+```
 
 ---
 
@@ -85,8 +101,8 @@ python3 --version
 # Install Homebrew first (if not already installed)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Then install Python, FFmpeg, and yt-dlp in one go
-brew install python ffmpeg yt-dlp
+# Then install Python and FFmpeg
+brew install python ffmpeg
 ```
 
 > **Apple Silicon (M1/M2/M3) users:** If `brew` isn't recognised after install, add it to your PATH:
@@ -95,9 +111,10 @@ brew install python ffmpeg yt-dlp
 > source ~/.zprofile
 > ```
 
-**Step 2 — Install yt-dlp** (skip if you ran `brew install yt-dlp` above):
+**Step 2 — Install Python dependencies:**
 ```bash
-python -m pip install yt-dlp
+pip install -r requirements.txt
+playwright install chromium
 ```
 
 ---
@@ -121,10 +138,11 @@ sudo apt install python3 python3-pip -y
 > For **Fedora**: `sudo dnf install python3 python3-pip -y`
 > For **Arch**: `sudo pacman -S python python-pip`
 
-**Step 2 — Install FFmpeg and yt-dlp:**
+**Step 2 — Install FFmpeg and Python dependencies:**
 ```bash
 sudo apt install ffmpeg -y
-python -m pip install yt-dlp
+pip install -r requirements.txt
+playwright install chromium
 ```
 
 ---
@@ -136,10 +154,11 @@ python -m pip install yt-dlp
 ```bash
 pkg install python ffmpeg -y
 ```
-3. Install yt-dlp:
+3. Install Python dependencies:
 ```bash
-python -m pip install yt-dlp
+pip install -r requirements.txt
 ```
+> Playwright (included in `requirements.txt`) won't run on Android — the Playwright Scanner tab is not available on Termux. yt-dlp will install and work normally.
 4. Grant storage access:
 ```bash
 termux-setup-storage
@@ -181,7 +200,7 @@ For login-gated pages (LinkedIn, Instagram, Facebook) the built-in proxy scanner
 ### Prerequisites (one-time)
 
 ```cmd
-pip install playwright
+pip install -r requirements.txt
 playwright install chromium
 ```
 
@@ -269,6 +288,7 @@ To back up history, use **Export selected** in the History tab. To wipe everythi
 KZ-Downloader/
 ├── kz_scanner.py        # Playwright scanner script (download from Scanner tab)
 ├── kz_scan.bat          # Guided launcher for kz_scanner.py (Windows)
+├── requirements.txt     # Python dependencies (yt-dlp, playwright)
 ├── README.md            # This file
 └── CHANGELOG.md         # Full version history
 ```
