@@ -8,6 +8,30 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v3.9 — Docs: Quick-Install Callout via Hosted requirements.txt
+**Date:** 29-06-2026
+
+### Added
+
+**Quick-install callout block in Setup Guide** — a highlighted callout added at the top of the Setup Guide section (before any OS-specific steps) for users who already have Python installed. Points to the hosted `requirements.txt` on MediaFire (`https://www.mediafire.com/file/rs8rde8jdrt2p8z/requirements.txt/file`) with two commands to get running immediately:
+
+```
+pip install -r requirements.txt
+playwright install chromium
+```
+
+A note in the callout reminds users that FFmpeg still needs to be installed separately as a system dependency (not via pip). The callout is styled as a blockquote so it visually stands out from the rest of the step-by-step OS instructions, making the fast path immediately visible without disrupting the full guide below.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `README.md` | Quick-install callout block added at top of Setup Guide / Install section |
+| `index.html` | Same callout block added at top of the Setup Guide sub-panel |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v3.8 — Docs: requirements.txt + README Install Guide Update
 **Date:** 29-06-2026
 
