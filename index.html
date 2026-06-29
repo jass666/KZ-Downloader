@@ -1,0 +1,2304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xe7g4c570i");
+</script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>KZ Downloader</title>
+<style>
+/* ─── TOKENS ─────────────────────────────────────────────── */
+:root[data-theme="dark"] {
+  --bg:           #0e0f11;
+  --bg2:          #161719;
+  --surface:      #1c1d20;
+  --surface2:     #242528;
+  --border:       #2e2f33;
+  --border-str:   #44454a;
+  --text:         #edeef1;
+  --text-sec:     #b8b9c0;
+  --text-muted:   #78797f;
+  --accent:       #00d9b8;
+  --accent-dim:   rgba(0,217,184,.12);
+  --accent-bdr:   rgba(0,217,184,.35);
+  --accent-text:  #00d9b8;
+  --term-bg:      #0a0b0d;
+  --term-text:    #c8faf4;
+  --term-prompt:  #00d9b8;
+  --warn-bg:      rgba(255,180,0,.08);
+  --warn-bdr:     rgba(255,180,0,.3);
+  --warn-text:    #f5c400;
+  --ok-bg:        rgba(0,200,120,.08);
+  --ok-bdr:       rgba(0,200,120,.3);
+  --ok-text:      #00c878;
+  --danger-bg:    rgba(220,60,60,.1);
+  --danger-bdr:   rgba(220,60,60,.35);
+  --danger-text:  #e05555;
+  --tab-active:   #1c1d20;
+  --tab-inactive: #131416;
+}
+:root[data-theme="light"] {
+  --bg:           #f2f3f5;
+  --bg2:          #e8e9ec;
+  --surface:      #ffffff;
+  --surface2:     #f5f6f8;
+  --border:       #d4d5da;
+  --border-str:   #b0b1b8;
+  --text:         #0d0e0f;
+  --text-sec:     #3a3b42;
+  --text-muted:   #70717a;
+  --accent:       #009e87;
+  --accent-dim:   rgba(0,158,135,.1);
+  --accent-bdr:   rgba(0,158,135,.35);
+  --accent-text:  #007a6a;
+  --term-bg:      #1a1c1f;
+  --term-text:    #c8faf4;
+  --term-prompt:  #00c8a8;
+  --warn-bg:      rgba(200,140,0,.08);
+  --warn-bdr:     rgba(200,140,0,.3);
+  --warn-text:    #b08000;
+  --ok-bg:        rgba(0,150,90,.08);
+  --ok-bdr:       rgba(0,150,90,.3);
+  --ok-text:      #007a50;
+  --danger-bg:    rgba(180,40,40,.08);
+  --danger-bdr:   rgba(180,40,40,.3);
+  --danger-text:  #c03030;
+  --tab-active:   #ffffff;
+  --tab-inactive: #eaebed;
+}
+
+/* ─── RESET & BASE ───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; line-height:1.5;
+  transition:background .2s,color .2s;
+}
+a{color:var(--accent-text);text-decoration:none}
+a:hover{text-decoration:underline}
+input,select,button{font-family:inherit;font-size:inherit}
+
+/* ─── LAYOUT ─────────────────────────────────────────────── */
+.app-wrap{max-width:920px;margin:0 auto;padding:1.5rem 1rem 3rem}
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.logo{display:flex;align-items:baseline;gap:.5rem}
+.logo-kz{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--accent)}
+.logo-name{font-size:15px;font-weight:500;color:var(--text-sec)}
+.logo-ver{font-size:11px;color:var(--text-muted);margin-left:4px;font-family:'Courier New',monospace}
+.header-actions{display:flex;align-items:center;gap:8px}
+
+/* theme toggle */
+.theme-toggle{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  background:var(--surface2);border:1px solid var(--border);
+  cursor:pointer;font-size:12px;color:var(--text-sec);
+  transition:all .15s;user-select:none;
+}
+.theme-toggle:hover{border-color:var(--accent-bdr);color:var(--accent-text)}
+.theme-icon{font-size:14px}
+
+/* ─── NAV TABS ───────────────────────────────────────────── */
+.nav-tabs{
+  display:flex;
+  border-bottom:1px solid var(--border);
+  margin-bottom:1.25rem;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;        /* Firefox */
+  -ms-overflow-style:none;     /* IE/Edge */
+}
+.nav-tabs::-webkit-scrollbar{display:none} /* Chrome/Safari */
+.nav-tab{
+  padding:10px 20px;font-size:13px;font-weight:500;
+  background:none;border:none;border-bottom:2px solid transparent;
+  cursor:pointer;white-space:nowrap;
+  transition:color .15s,border-color .15s;
+  margin-bottom:-1px;
+  flex-shrink:0;
+}
+:root[data-theme="dark"]  .nav-tab        { color:#a0a1a8; }
+:root[data-theme="light"] .nav-tab        { color:#3a3b44; }
+:root[data-theme="dark"]  .nav-tab:hover  { color:#d8d9de; }
+:root[data-theme="light"] .nav-tab:hover  { color:#0d0e12; }
+:root[data-theme="dark"]  .nav-tab.active { color:#00d9b8; border-bottom-color:#00d9b8; }
+:root[data-theme="light"] .nav-tab.active { color:#006657; border-bottom-color:#006657; }
+
+/* ─── PANEL ──────────────────────────────────────────────── */
+.panel{display:none}
+.panel.active{display:block}
+
+/* ─── SECTION CARD ───────────────────────────────────────── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:1rem 1.25rem;
+  margin-bottom:.875rem;
+}
+.card-title{
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text-sec);margin-bottom:.75rem;
+}
+
+/* ─── PROFILE INPUT ──────────────────────────────────────── */
+.profile-row{display:flex;gap:8px;margin-bottom:.75rem}
+.profile-row input{
+  flex:1;padding:8px 12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);
+  font-family:'Courier New',monospace;font-size:12px;
+  transition:border-color .15s;
+}
+.profile-row input:focus{outline:none;border-color:var(--accent-bdr)}
+.profile-row input::placeholder{color:var(--text-muted)}
+
+.profile-list{display:flex;flex-direction:column;gap:6px}
+.profile-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;
+}
+.plat-badge{
+  font-size:10px;font-weight:700;letter-spacing:.05em;
+  padding:2px 7px;border-radius:4px;flex-shrink:0;
+}
+.plat-yt  {background:#ff0000;color:#fff}
+.plat-ig  {background:#c13584;color:#fff}
+.plat-fb  {background:#1877f2;color:#fff}
+.plat-li  {background:#0a66c2;color:#fff}
+.plat-tw  {background:#1d9bf0;color:#fff}
+.plat-gen {background:#555;color:#fff}
+.profile-url{flex:1;font-size:12px;font-family:'Courier New',monospace;color:var(--text-sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-del{background:none;border:none;cursor:pointer;padding:3px 7px;color:var(--text-muted);border-radius:5px;font-size:15px;line-height:1;transition:all .15s}
+.profile-del:hover{color:var(--danger-text);background:var(--danger-bg)}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent-dim);color:var(--accent-text);font-size:10px;font-weight:700;margin-left:5px}
+
+/* ─── SUGGESTED PRESETS ──────────────────────────────────── */
+.presets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}
+.preset-btn{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 10px;
+  cursor:pointer;text-align:left;transition:all .15s;
+}
+.preset-btn:hover{border-color:var(--accent-bdr);background:var(--accent-dim)}
+.preset-brand{font-size:11px;font-weight:600;color:var(--accent-text)}
+.preset-handle{font-size:11px;color:var(--text-sec);margin-top:2px;font-weight:500}
+.preset-plat{font-size:10px;color:var(--text-sec);margin-top:3px}
+
+/* ─── OPTIONS ────────────────────────────────────────────── */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt-label{font-size:11px;color:var(--text-sec);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+select,input[type=text]{
+  width:100%;padding:8px 10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:7px;color:var(--text);
+  font-family:'Courier New',monospace;font-size:12px;
+  transition:border-color .15s;
+}
+select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
+
+/* flags */
+.flags-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.flag-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;
+  border-radius:20px;
+  cursor:pointer;font-size:11px;font-weight:500;
+  user-select:none;transition:all .15s;
+  border:1px solid transparent;
+}
+:root[data-theme="dark"]  .flag-chip     { background:#2e3035; border-color:#45464d; color:#9a9ba0; }
+:root[data-theme="light"] .flag-chip     { background:#e2e3e8; border-color:#b8b9c2; color:#444550; }
+:root[data-theme="dark"]  .flag-chip.on  { background:#004d44; border-color:#00c8b0; color:#00e8c8; }
+:root[data-theme="light"] .flag-chip.on  { background:#006657; border-color:#004840; color:#fff;    }
+.flag-pip{width:6px;height:6px;border-radius:50%;transition:background .15s;flex-shrink:0}
+:root[data-theme="dark"]  .flag-pip      { background:#45464d; }
+:root[data-theme="light"] .flag-pip      { background:#b8b9c2; }
+:root[data-theme="dark"]  .flag-chip.on .flag-pip { background:#00e8c8; }
+:root[data-theme="light"] .flag-chip.on .flag-pip { background:#a0fce0; }
+
+/* ─── OUTPUT MODE TABS ───────────────────────────────────── */
+.out-tabs{display:flex;gap:0;border:1px solid var(--border-str);border-radius:8px;overflow:hidden;margin-bottom:.875rem}
+.out-tab{flex:1;padding:7px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s}
+.out-tab:not(:last-child){border-right:1px solid var(--border-str)}
+:root[data-theme="dark"]  .out-tab        { background:#202226; color:#8a8b92; }
+:root[data-theme="light"] .out-tab        { background:#dddee3; color:#555760; }
+:root[data-theme="dark"]  .out-tab:hover  { background:#2a2b30; color:#c8c9ce; }
+:root[data-theme="light"] .out-tab:hover  { background:#c8c9d0; color:#1a1b1e; }
+:root[data-theme="dark"]  .out-tab.active { background:#1c1d20; color:#e4e5e8; }
+:root[data-theme="light"] .out-tab.active { background:#ffffff; color:#111213; }
+
+/* ─── TERMINAL BLOCK ─────────────────────────────────────── */
+.term-wrap{background:var(--term-bg);border:1px solid #333;border-radius:9px;overflow:hidden}
+.term-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:#111213;border-bottom:1px solid #222}
+.term-dots{display:flex;gap:5px}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-dot-r{background:#ff5f57}.term-dot-y{background:#febc2e}.term-dot-g{background:#28c840}
+.term-label{font-size:11px;color:#666;font-family:'Courier New',monospace}
+.term-body{
+  padding:.875rem 1rem;
+  font-family:'Courier New',monospace;font-size:12px;
+  color:var(--term-text);line-height:1.8;
+  word-break:break-all;white-space:pre-wrap;
+  min-height:80px;max-height:280px;overflow-y:auto;
+}
+.term-body.empty{color:#444;font-style:italic}
+.term-cursor{display:inline-block;width:8px;height:14px;background:var(--term-prompt);animation:blink 1.1s step-end infinite;vertical-align:middle;margin-left:2px;border-radius:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ─── ACTION ROW ─────────────────────────────────────────── */
+.action-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:.875rem}
+
+/* Base button — solid mid-tone background, always readable in both themes */
+.btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 14px;font-size:12px;font-weight:600;
+  border-radius:7px;cursor:pointer;transition:all .15s;white-space:nowrap;
+  border:1px solid transparent;
+}
+:root[data-theme="dark"]   .btn{ background:#2e3035; border-color:#45464d; color:#d8d9dc; }
+:root[data-theme="light"]  .btn{ background:#e2e3e8; border-color:#b8b9c2; color:#1a1b1e; }
+:root[data-theme="dark"]   .btn:hover{ background:#3a3b41; border-color:#00d9b8; color:#00d9b8; }
+:root[data-theme="light"]  .btn:hover{ background:#d0d1d8; border-color:#009e87; color:#005f54; }
+
+/* Accent — teal, solid fill */
+:root[data-theme="dark"]   .btn-accent{ background:#00a896; border-color:#00c8b0; color:#000; }
+:root[data-theme="light"]  .btn-accent{ background:#007a6a; border-color:#005f54; color:#fff; }
+:root[data-theme="dark"]   .btn-accent:hover{ background:#00d9b8; border-color:#00d9b8; color:#000; }
+:root[data-theme="light"]  .btn-accent:hover{ background:#005f54; border-color:#004840; color:#fff; }
+
+/* OK / green — solid fill */
+:root[data-theme="dark"]   .btn-ok{ background:#0d6646; border-color:#0f7e54; color:#6fffc4; }
+:root[data-theme="light"]  .btn-ok{ background:#0a6640; border-color:#084f30; color:#fff; }
+:root[data-theme="dark"]   .btn-ok:hover{ background:#0f7e54; border-color:#6fffc4; color:#c8ffe8; }
+:root[data-theme="light"]  .btn-ok:hover{ background:#084f30; border-color:#063a24; color:#e0ffe8; }
+
+/* Ghost / danger */
+:root[data-theme="dark"]   .btn-ghost{ background:#2a1f1f; border-color:#5a3030; color:#c08080; }
+:root[data-theme="light"]  .btn-ghost{ background:#f5e8e8; border-color:#d4a0a0; color:#8b2020; }
+:root[data-theme="dark"]   .btn-ghost:hover{ background:#3d2020; border-color:#e05555; color:#e05555; }
+:root[data-theme="light"]  .btn-ghost:hover{ background:#f0d0d0; border-color:#c03030; color:#c03030; }
+
+/* Warn / amber — solid fill */
+:root[data-theme="dark"]   .btn-warn{ background:#5a3e00; border-color:#7a5600; color:#ffd966; }
+:root[data-theme="light"]  .btn-warn{ background:#7a5000; border-color:#5a3a00; color:#fff; }
+:root[data-theme="dark"]   .btn-warn:hover{ background:#7a5600; border-color:#ffd966; color:#ffeeaa; }
+:root[data-theme="light"]  .btn-warn:hover{ background:#5a3a00; border-color:#3a2400; color:#ffe8aa; }
+
+/* ─── NOTICE BOXES ───────────────────────────────────────── */
+.notice{padding:10px 14px;border-radius:7px;font-size:12px;line-height:1.65;margin-top:.75rem}
+.notice a{font-weight:600}
+.notice-warn{background:var(--warn-bg);border:1px solid var(--warn-bdr);color:var(--warn-text)}
+.notice-info{background:var(--accent-dim);border:1px solid var(--accent-bdr);color:var(--accent-text)}
+.notice-ok{background:var(--ok-bg);border:1px solid var(--ok-bdr);color:var(--ok-text)}
+
+/* ─── SETUP GUIDE ────────────────────────────────────────── */
+.setup-step{display:flex;gap:14px;margin-bottom:1.25rem}
+.step-num{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--accent-dim);border:1px solid var(--accent-bdr);
+  color:var(--accent-text);font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.step-body{flex:1;min-width:0;} /* min-width:0 allows flex child to shrink below content size */
+.step-title{font-size:13px;font-weight:600;margin-bottom:5px}
+.step-desc{font-size:12px;color:var(--text-sec);line-height:1.65;margin-bottom:8px}
+.step-desc code{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;font-family:'Courier New',monospace;font-size:11px;color:var(--text)}
+
+/* Code block — responsive, scales with display size, never overflows */
+.code-block{
+  background:var(--term-bg);border:1px solid #333;border-radius:7px;
+  /* Clamp font between 9px (tiny) and 12.5px (large screen) based on viewport */
+  font-size:clamp(9px, 1.8vw, 12.5px);
+  font-family:'Courier New',monospace;
+  color:#c8faf4;line-height:1.75;margin-bottom:8px;
+  position:relative;
+  /* Responsive padding: right side always reserves room for Copy button */
+  padding:.65rem clamp(3rem, 8vw, 4.5rem) .65rem clamp(.6rem, 2vw, 1rem);
+  /* CRITICAL: wrapping prevents overflow on any screen width */
+  white-space:pre-wrap;
+  word-break:break-all;
+  overflow-wrap:anywhere;
+  /* Container constraints */
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  /* Horizontal scroll only as absolute last resort */
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.code-copy{
+  position:absolute;top:6px;
+  right:clamp(4px, 1.5vw, 8px);
+  padding:3px clamp(5px, 1vw, 8px);
+  font-size:clamp(8px, 1.4vw, 10px);
+  background:#222;border:1px solid #444;border-radius:4px;
+  color:#888;cursor:pointer;transition:all .15s;
+  white-space:nowrap;
+}
+.code-copy:hover{background:#333;color:#ccc}
+.os-tabs{display:flex;gap:0;border:1px solid var(--border-str);border-radius:7px;overflow:hidden;margin-bottom:.875rem;width:100%}
+.os-tab{flex:1;padding:5px 14px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;text-align:center}
+.os-tab:not(:last-child){border-right:1px solid var(--border-str)}
+:root[data-theme="dark"]  .os-tab        { background:#202226; color:#8a8b92; }
+:root[data-theme="light"] .os-tab        { background:#dddee3; color:#555760; }
+:root[data-theme="dark"]  .os-tab:hover  { background:#2a2b30; color:#c8c9ce; }
+:root[data-theme="light"] .os-tab:hover  { background:#c8c9d0; color:#1a1b1e; }
+:root[data-theme="dark"]  .os-tab.active { background:#004d44; color:#00e8c8; }
+:root[data-theme="light"] .os-tab.active { background:#006657; color:#fff;    }
+.os-panel{display:none}.os-panel.active{display:block}
+
+.section-divider{border:none;border-top:1px solid var(--border);margin:1.25rem 0}
+
+/* ─── HISTORY TAB ────────────────────────────────────────── */
+.hist-type-tabs{display:flex;border:1px solid var(--border-str);border-radius:7px;overflow:hidden}
+.hist-type{
+  padding:6px 13px;font-size:12px;font-weight:500;border:none;cursor:pointer;transition:all .15s;
+}
+.hist-type:not(:last-child){border-right:1px solid var(--border-str)}
+:root[data-theme="dark"]  .hist-type         { background:#202226; color:#8a8b92; }
+:root[data-theme="light"] .hist-type         { background:#dddee3; color:#555760; }
+:root[data-theme="dark"]  .hist-type:hover   { background:#2a2b30; color:#c8c9ce; }
+:root[data-theme="light"] .hist-type:hover   { background:#c8c9d0; color:#1a1b1e; }
+:root[data-theme="dark"]  .hist-type.active  { background:#004d44; color:#00e8c8; }
+:root[data-theme="light"] .hist-type.active  { background:#006657; color:#fff;    }
+
+.hist-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 4px;border-bottom:1px solid var(--border);
+  transition:background .1s;
+}
+.hist-item:last-child{border-bottom:none}
+.hist-item:hover{background:var(--surface2);margin:0 -4px;padding-left:8px;padding-right:8px;border-radius:6px}
+.hist-cb{margin-top:3px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.hist-body{flex:1;min-width:0}
+.hist-plat{display:inline-flex;align-items:center;gap:5px;margin-bottom:3px}
+.hist-url{font-size:12px;font-family:'Courier New',monospace;color:var(--text-sec);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hist-cmd{font-size:11px;font-family:'Courier New',monospace;color:var(--text-muted);
+  white-space:pre-wrap;word-break:break-all;margin-top:3px;
+  background:var(--term-bg);border-radius:4px;padding:4px 7px;line-height:1.6}
+.hist-meta{font-size:10px;color:var(--text-muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap}
+.hist-actions{display:flex;gap:5px;flex-shrink:0;margin-top:1px}
+.hist-act-btn{
+  padding:3px 7px;font-size:10px;border-radius:4px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text-sec);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.hist-act-btn:hover{border-color:var(--accent-bdr);color:var(--accent-text)}
+
+/* ─── EMPTY STATE ────────────────────────────────────────── */
+.empty-state{text-align:center;padding:2rem;color:var(--text-muted);font-size:12px}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+@media(max-width:600px){
+  .opts-grid{grid-template-columns:1fr}
+  .presets-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  /* setup steps stack tighter on mobile */
+  .setup-step{gap:8px}
+  .step-num{width:22px;height:22px;font-size:11px;flex-shrink:0}
+  .step-title{font-size:12px}
+  .step-desc{font-size:11px}
+  /* app padding tighter on mobile */
+  .app-wrap{padding:1rem .75rem 2.5rem}
+  .card{padding:.875rem 1rem}
+  /* nav tabs smaller text */
+  .nav-tab{padding:9px 12px;font-size:11px}
+}
+@media(max-width:400px){
+  .logo-kz{font-size:18px}
+  .logo-name{font-size:13px}
+  /* Extra-narrow: step number aligns top so long titles don't crowd it */
+  .setup-step{align-items:flex-start}
+}
+/* Wide screens — code blocks can breathe a bit more */
+@media(min-width:900px){
+  .code-block{font-size:13px;line-height:1.8}
+}
+
+/* ─── DEVICE SELECTOR ────────────────────────────────────── */
+.device-selector{
+  display:flex;align-items:center;gap:3px;
+  padding:4px;border-radius:10px;
+  background:var(--surface2);border:1px solid var(--border);
+}
+.dev-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:5px 9px;border-radius:7px;
+  background:none;border:none;cursor:pointer;
+  font-size:11px;font-weight:500;color:var(--text-sec);
+  transition:all .15s;white-space:nowrap;
+}
+.dev-btn:hover{background:var(--surface);color:var(--text)}
+.dev-btn.active{
+  background:var(--accent-dim);
+  border:1px solid var(--accent-bdr);
+  color:var(--accent-text);
+  font-weight:700;
+}
+.dev-btn .dev-icon{font-size:14px;line-height:1}
+.dev-label{display:inline} /* hidden on very small screens */
+@media(max-width:520px){
+  .dev-label{display:none}
+  .dev-btn{padding:6px 8px}
+}
+@media(max-width:380px){
+  .device-selector{gap:1px;padding:3px}
+  .dev-btn{padding:5px 6px}
+  .dev-btn .dev-icon{font-size:13px}
+}
+
+/* ─── PLATFORM NOTICE BANNER ─────────────────────────────── */
+.platform-banner{
+  display:none;
+  padding:9px 14px;border-radius:8px;
+  font-size:12px;line-height:1.6;
+  margin-bottom:.875rem;
+  border:1px solid;
+}
+.platform-banner.visible{display:block}
+.platform-banner.info{background:var(--accent-dim);border-color:var(--accent-bdr);color:var(--accent-text)}
+.platform-banner.warn{background:var(--warn-bg);border-color:var(--warn-bdr);color:var(--warn-text)}
+
+/* ─── PER-DEVICE VISIBILITY ──────────────────────────────── */
+/* Elements hidden/shown by JS via data-show-on / data-hide-on are toggled with .dev-hidden */
+.dev-hidden{display:none!important}
+
+/* ─── MOBILE FIXES ───────────────────────────────────────── */
+@media(max-width:768px){
+  /* Prevent iOS/Android auto-zoom on input focus */
+  select,input[type=text],.profile-row input{font-size:16px!important}
+  /* Touch target enlargement */
+  .hist-act-btn{padding:7px 10px;font-size:11px;min-height:36px}
+  .code-copy{padding:6px 10px;font-size:11px;min-height:32px;min-width:44px}
+  .profile-del{padding:6px 10px;font-size:17px;min-width:36px;min-height:36px}
+  .flag-chip{padding:8px 14px;font-size:12px}
+  .action-row{flex-direction:column;align-items:stretch}
+  .action-row .btn{justify-content:center;padding:10px 14px;font-size:13px}
+  .out-tabs{flex-wrap:wrap}
+  .out-tab{flex:none;flex-grow:1;min-width:80px}
+  .hist-actions{flex-direction:column;gap:4px}
+  .hist-item{flex-wrap:wrap;gap:6px}
+  .hist-body{min-width:0;width:100%}
+  .term-body{min-height:120px}
+  .presets-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .header-actions{gap:6px}
+  .header{flex-wrap:wrap;gap:8px}
+}
+@media(max-width:380px){
+  .nav-tab{padding:8px 9px;font-size:10px}
+  .out-tab{font-size:11px}
+}
+
+/* ─── MEDIA SCANNER ──────────────────────────────────────── */
+.scan-type-video   {background:var(--accent);color:#000}
+.scan-type-audio   {background:#7c3aed;color:#fff}
+.scan-type-file    {background:#555;color:#fff}
+.scan-type-playlist{background:#b45309;color:#fff}
+.scan-spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid var(--border-str);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;
+  vertical-align:middle;margin-right:7px;flex-shrink:0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <span class="logo-kz">KZ</span>
+      <span class="logo-name">Downloader</span>
+      <span class="logo-ver">v2.7</span>
+    </div>
+    <div class="header-actions">
+      <!-- Device Selector -->
+      <div class="device-selector" id="device-selector">
+        <button class="dev-btn" data-dev="windows" onclick="setDevice('windows',this)" title="Windows">
+          <span class="dev-icon">🖥</span><span class="dev-label">Windows</span>
+        </button>
+        <button class="dev-btn" data-dev="mac" onclick="setDevice('mac',this)" title="macOS">
+          <span class="dev-icon">🍎</span><span class="dev-label">Mac</span>
+        </button>
+        <button class="dev-btn" data-dev="linux" onclick="setDevice('linux',this)" title="Linux">
+          <span class="dev-icon">🐧</span><span class="dev-label">Linux</span>
+        </button>
+        <button class="dev-btn" data-dev="android" onclick="setDevice('android',this)" title="Android">
+          <span class="dev-icon">🤖</span><span class="dev-label">Android</span>
+        </button>
+        <button class="dev-btn" data-dev="ios" onclick="setDevice('ios',this)" title="iOS">
+          <span class="dev-icon">📱</span><span class="dev-label">iOS</span>
+        </button>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+        <span class="theme-icon">🌙</span>
+        <span id="theme-label">Light mode</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- NAV TABS -->
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('profiles',this)">📡 Profiles</button>
+    <button class="nav-tab" onclick="switchTab('history',this)">🕓 History</button>
+    <button class="nav-tab" onclick="switchTab('presets',this)">⭐ Presets</button>
+    <button class="nav-tab" onclick="switchTab('scanner',this)">🔍 Scanner</button>
+    <button class="nav-tab" onclick="switchTab('options',this)">⚙️ Settings</button>
+    <button class="nav-tab" onclick="switchTab('setup',this)">📦 Setup Guide</button>
+  </nav>
+
+  <!-- PLATFORM BANNER -->
+  <div class="platform-banner" id="platform-banner"></div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 1 · PROFILES
+  ══════════════════════════════════════════════ -->
+  <div class="panel active" id="panel-profiles">
+
+    <div class="card">
+      <div class="card-title">Add any social profile / channel / page</div>
+      <div class="profile-row">
+        <input type="text" id="profile-input"
+          placeholder="https://www.youtube.com/@ChannelName/videos  or  https://www.instagram.com/handle/" />
+        <button class="btn btn-accent" onclick="addProfile()">+ Add</button>
+      </div>
+      <div class="notice notice-info">
+        Paste any YouTube channel, Instagram profile, Facebook page, LinkedIn page, or direct video URL. yt-dlp handles all of these natively.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Profile queue <span class="badge" id="profile-count">0</span></span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span id="save-indicator" style="font-size:10px;color:var(--ok-text);opacity:0;transition:opacity .4s;font-weight:600;letter-spacing:.04em">✓ SAVED</span>
+          <button class="btn btn-ghost" style="font-size:10px;padding:3px 9px;border-radius:5px" onclick="clearAll()" title="Remove all profiles from queue">🗑 Clear</button>
+        </span>
+      </div>
+      <div class="profile-list" id="profile-list">
+        <div class="empty-state">
+          <div class="empty-icon">🔗</div>
+          No profiles added yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INLINE OUTPUT ── -->
+    <div class="card">
+      <div class="card-title">Generated command</div>
+
+      <div class="out-tabs" id="out-tabs-wrap">
+        <button class="out-tab active" id="outtab-terminal" onclick="setOutTab('terminal',this)">Terminal command</button>
+        <button class="out-tab" id="outtab-batch" onclick="setOutTab('batch',this)">Batch script (.bat)</button>
+        <button class="out-tab" id="outtab-args" onclick="setOutTab('args',this)">Args file</button>
+      </div>
+
+      <div class="term-wrap">
+        <div class="term-bar">
+          <div class="term-dots">
+            <div class="term-dot term-dot-r"></div>
+            <div class="term-dot term-dot-y"></div>
+            <div class="term-dot term-dot-g"></div>
+          </div>
+          <span class="term-label" id="term-tab-label">Command Prompt</span>
+        </div>
+        <div class="term-body" id="term-body">
+          <span style="color:#444;font-style:italic">Add profiles above to generate commands.</span>
+        </div>
+      </div>
+
+      <div class="action-row" id="action-row">
+        <button class="btn btn-accent" id="copy-btn" onclick="copyCmd()">📋 Copy</button>
+        <button class="btn btn-ok" id="btn-download" onclick="downloadFile()">⬇ Download file</button>
+        <button class="btn btn-warn" id="btn-launch-cmd" onclick="launchBat()">▶ Launch in CMD</button>
+        <button class="btn" id="btn-share" onclick="shareCmd()" style="display:none">📤 Share</button>
+        <button class="btn btn-ghost" onclick="clearAll()">🗑 Clear queue</button>
+        <button class="btn btn-ghost" onclick="clearSavedData()" style="opacity:.6" title="Wipe localStorage">⊘ Clear saved</button>
+      </div>
+
+      <!-- Per-device output notices -->
+      <div id="output-notice-windows" class="notice notice-warn" style="margin-top:.75rem;display:none">
+        <strong>▶ Launch in CMD</strong> downloads a <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-size:11px">.bat</code> launcher — double-click it to open a CMD window with the command ready to run.
+      </div>
+      <div id="output-notice-mac" class="notice notice-info" style="margin-top:.75rem;display:none">
+        <strong>Terminal command</strong> is ready to paste in <strong>Terminal.app</strong> or iTerm2. Make sure yt-dlp is installed via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">brew install yt-dlp</code> first. See Setup Guide for details.
+      </div>
+      <div id="output-notice-linux" class="notice notice-info" style="margin-top:.75rem;display:none">
+        <strong>Terminal command</strong> is ready to paste in your terminal emulator. Install yt-dlp via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">python -m pip install yt-dlp</code> or the standalone binary. See Setup Guide.
+      </div>
+      <div id="output-notice-android" class="notice notice-info" style="margin-top:.75rem;display:none">
+        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Setup Guide → Android</strong>.
+      </div>
+      <div id="output-notice-ios" class="notice notice-warn" style="margin-top:.75rem;display:none">
+        <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Options: (1) run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS; (2) use a self-hosted server and trigger downloads remotely. Copy the command and paste it into your SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
+      </div>
+
+      <div class="notice notice-info" id="list-mode-note" style="display:none;margin-top:.5rem">
+        <strong>List mode:</strong> uses <code style="background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px;font-size:11px">--flat-playlist --get-title --get-url</code> to print all video titles and URLs without downloading anything.
+      </div>
+    </div>
+
+    <div class="notice notice-warn" id="li-notice" style="display:none">
+      ⚠️ LinkedIn detected — authentication required. Enable <strong>Use cookies (Chrome)</strong> in Options and make sure you are logged in to LinkedIn in Chrome before running commands.
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 2 · OPTIONS
+  ══════════════════════════════════════════════ -->
+  <div class="panel" id="panel-options">
+
+    <div class="card">
+      <div class="card-title">Download mode</div>
+      <div class="opts-grid" style="grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <label style="font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px" id="mode-all-wrap">
+          <input type="radio" name="dlmode" value="all" checked onchange="updateMode()" style="accent-color:var(--accent)"> Download all videos
+        </label>
+        <label style="font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px" id="mode-list-wrap">
+          <input type="radio" name="dlmode" value="list" onchange="updateMode()" style="accent-color:var(--accent)"> List only (no download)
+        </label>
+      </div>
+      <div class="notice notice-info" id="mode-hint">
+        <strong>Download all:</strong> fetches every video from the profile/channel. Use date filters or playlist flags below to limit scope.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Format &amp; quality</div>
+      <div class="opts-grid">
+        <div>
+          <div class="opt-label">Format / quality</div>
+          <select id="format-sel">
+            <option value="bv*+ba/b">Best (video + audio)</option>
+            <option value="bv[height<=1080]+ba/b[height<=1080]">1080p max</option>
+            <option value="bv[height<=720]+ba/b[height<=720]">720p max</option>
+            <option value="bv[height<=480]+ba/b[height<=480]">480p max</option>
+            <option value="ba/b">Audio only (best)</option>
+            <option value="ba[ext=m4a]/ba">Audio only (m4a)</option>
+            <option value="bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4">MP4 preferred</option>
+          </select>
+        </div>
+        <div>
+          <div class="opt-label">Date limit (optional)</div>
+          <input type="text" id="date-filter" placeholder="e.g. 20240101 (YYYYMMDD)" />
+        </div>
+        <div>
+          <div class="opt-label">Output folder</div>
+          <input type="text" id="outdir" value="D:/KZ Downloads" />
+          <div style="display:flex;gap:8px;margin-top:8px" id="save-mode-wrap">
+            <label style="font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;flex:1" id="savemode-fixed-wrap">
+              <input type="radio" name="savemode" value="fixed" checked onchange="updateSaveMode()" style="accent-color:var(--accent)"> Fixed folder
+            </label>
+            <label style="font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;flex:1" id="savemode-ask-wrap">
+              <input type="radio" name="savemode" value="ask" onchange="updateSaveMode()" style="accent-color:var(--accent)"> Ask every time
+            </label>
+          </div>
+          <div id="outdir-hint" style="font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.5"></div>
+        </div>
+        <div>
+          <div class="opt-label">Filename template</div>
+          <select id="tmpl-sel" onchange="syncTemplate()">
+            <option value="%(title)s.%(ext)s">Title.ext</option>
+            <option value="%(upload_date)s_%(title)s.%(ext)s">Date_Title.ext</option>
+            <option value="%(uploader)s/%(upload_date)s_%(title)s.%(ext)s">Channel/Date_Title.ext</option>
+            <option value="%(id)s_%(title)s.%(ext)s">ID_Title.ext</option>
+            <option value="custom">Custom…</option>
+          </select>
+        </div>
+        <div style="grid-column:span 2">
+          <div class="opt-label">Custom template (editable)</div>
+          <input type="text" id="tmpl-custom" value="%(title)s.%(ext)s" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Extra flags</div>
+      <div class="flags-wrap" id="flags-wrap"></div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 3 · PRESETS
+  ══════════════════════════════════════════════ -->
+  <div class="panel" id="panel-presets">
+
+    <!-- Toolbar -->
+    <div class="card" style="padding:.75rem 1rem">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-accent" style="font-size:11px" onclick="openPresetModal()">＋ Add preset</button>
+        <button class="btn btn-ok"    style="font-size:11px" onclick="exportPresets()">⬇ Export</button>
+        <button class="btn btn-accent" style="font-size:11px" onclick="document.getElementById('preset-import-file').click()">⬆ Import</button>
+        <input type="file" id="preset-import-file" accept=".json" style="display:none" onchange="importPresets(event)" />
+        <button class="btn btn-ghost" style="font-size:11px;margin-left:auto" onclick="clearAllPresets()">🗑 Clear all</button>
+      </div>
+    </div>
+
+    <!-- Preset grid -->
+    <div class="card">
+      <div class="card-title">Saved presets <span class="badge" id="preset-count">0</span></div>
+      <div class="presets-grid" id="presets-grid"></div>
+    </div>
+
+    <!-- Add / Edit Modal (inline overlay) -->
+    <div id="preset-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center">
+      <div style="background:var(--surface);border:1px solid var(--border-str);border-radius:12px;padding:1.25rem;width:min(420px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.4)">
+        <div style="font-size:13px;font-weight:700;margin-bottom:1rem;color:var(--text)" id="preset-modal-title">Add preset</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <div class="opt-label">Brand / name</div>
+            <input type="text" id="pm-brand" placeholder="e.g. Tata Motors" style="width:100%" />
+          </div>
+          <div>
+            <div class="opt-label">Handle / sub-label</div>
+            <input type="text" id="pm-handle" placeholder="e.g. @TataMotors" style="width:100%" />
+          </div>
+          <div>
+            <div class="opt-label">URL</div>
+            <input type="text" id="pm-url" placeholder="https://www.youtube.com/@..." style="width:100%" />
+          </div>
+          <div>
+            <div class="opt-label">Platform (auto-detected, override if needed)</div>
+            <select id="pm-plat" style="width:100%">
+              <option value="yt">YouTube</option>
+              <option value="ig">Instagram</option>
+              <option value="fb">Facebook</option>
+              <option value="li">LinkedIn</option>
+              <option value="tw">Twitter / X</option>
+              <option value="gen">Other</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:1.1rem;justify-content:flex-end">
+          <button class="btn" onclick="closePresetModal()">Cancel</button>
+          <button class="btn btn-accent" onclick="savePresetModal()">Save</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 4 · HISTORY
+  ══════════════════════════════════════════════ -->
+  <div class="panel" id="panel-history">
+
+    <!-- Toolbar -->
+    <div class="card" style="padding:.75rem 1rem">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <div class="hist-type-tabs">
+          <button class="hist-type active" id="ht-links" onclick="setHistType('links',this)">🔗 Link history</button>
+          <button class="hist-type" id="ht-commands" onclick="setHistType('commands',this)">💻 Command history</button>
+        </div>
+        <input type="text" id="hist-search" placeholder="Search…" style="flex:1;min-width:120px;max-width:260px;font-size:12px" oninput="renderHistory()" />
+        <button class="btn" style="font-size:11px" onclick="selectAllHist()" id="sel-all-btn">☐ Select all</button>
+        <button class="btn btn-ok" style="font-size:11px" onclick="exportSelected()">⬇ Export selected</button>
+        <button class="btn btn-accent" style="font-size:11px" onclick="document.getElementById('import-file').click()">⬆ Import</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importHistory(event)" />
+        <button class="btn btn-ghost" style="font-size:11px" onclick="deleteSelected()">🗑 Delete selected</button>
+      </div>
+    </div>
+
+    <!-- History list -->
+    <div class="card" style="padding:.5rem 1rem">
+      <div id="hist-list">
+        <div class="empty-state"><div class="empty-icon">🕓</div>No history yet — generate commands in the Output tab and they'll appear here.</div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:.5rem">
+      History is stored in your browser's local storage. <a href="#" onclick="clearAllHistory();return false" style="color:var(--danger-text)">Clear all history</a>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB · SCANNER
+  ══════════════════════════════════════════════ -->
+  <div class="panel" id="panel-scanner">
+
+    <div class="card">
+      <div class="card-title">Scan a page for media</div>
+      <div class="profile-row">
+        <input type="text" id="scanner-input"
+          placeholder="https://example.com/page-with-videos"
+          onkeydown="if(event.key==='Enter')scanMedia()" />
+        <button class="btn btn-accent" onclick="scanMedia()">🔍 Scan</button>
+      </div>
+      <div class="notice notice-info">
+        Paste any page URL to extract video, audio, and media links. Known platforms (YouTube, TikTok, Instagram, etc.) are detected instantly — other pages are fetched via a CORS proxy.
+      </div>
+    </div>
+
+    <div id="scan-status"></div>
+
+    <div id="scan-results-wrap" style="display:none">
+      <div class="card">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Found media <span class="badge" id="scan-count">0</span></span>
+        </div>
+        <div class="profile-list" id="scan-list"></div>
+        <div id="scan-truncation-notice"></div>
+      </div>
+      <div class="action-row" id="scan-action-row" style="display:none">
+        <button class="btn btn-accent" onclick="addScannedItems(true)">☑ Add all</button>
+        <button class="btn btn-ok"     onclick="addScannedItems(false)">＋ Add selected</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TAB 4 · SETUP GUIDE
+  ══════════════════════════════════════════════ -->
+  <div class="panel" id="panel-setup">
+
+    <div class="card">
+      <div class="card-title">Operating System</div>
+      <div class="os-tabs" id="setup-os-tabs">
+        <button class="os-tab active" id="setup-os-windows" onclick="setOS('win',this)">Windows</button>
+        <button class="os-tab" id="setup-os-mac" onclick="setOS('mac',this)">macOS</button>
+        <button class="os-tab" id="setup-os-linux" onclick="setOS('linux',this)">Linux</button>
+        <button class="os-tab" id="setup-os-android" onclick="setOS('android',this)">📱 Android</button>
+        <button class="os-tab" id="setup-os-ios" onclick="setOS('ios',this)">🍎 iOS</button>
+      </div>
+
+      <!-- WINDOWS -->
+      <div class="os-panel active" id="os-win">
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Install Python 3.10+</div>
+            <div class="step-desc">
+              Download from <a href="https://www.python.org/downloads/" target="_blank">python.org/downloads</a>.
+              During install, <strong>tick "Add Python to PATH"</strong> — this is required.
+              Verify in CMD:
+            </div>
+            <div class="code-block">python --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Install yt-dlp</div>
+            <div class="step-desc">Open <strong>Command Prompt</strong> (Win+R → <code>cmd</code>) and run:</div>
+            <div class="code-block">python -m pip install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">To update later:</div>
+            <div class="code-block">python -m pip install -U yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Install FFmpeg (required for merging video+audio)</div>
+            <div class="step-desc">
+              Download from <a href="https://ffmpeg.org/download.html" target="_blank">ffmpeg.org</a>
+              (Windows build by BtbN or gyan.dev). Extract the zip, copy the <code>bin</code> folder path,
+              and add it to your <strong>System PATH</strong> (Search → "Environment Variables" → Path → New).
+              Verify:
+            </div>
+            <div class="code-block">ffmpeg -version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Optional: install browser cookies support</div>
+            <div class="step-desc">Required for LinkedIn, private Instagram, and age-restricted content.</div>
+            <div class="code-block">python -m pip install yt-dlp[default]<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Test it</div>
+            <div class="code-block">python -m yt_dlp --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-ok">You're ready! Go to the Profiles tab, add a URL, and generate your first command.</div>
+          </div>
+        </div>
+
+      </div><!-- /os-win -->
+
+      <!-- macOS -->
+      <div class="os-panel" id="os-mac">
+
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Install Homebrew</div>
+            <div class="step-desc">Homebrew is the package manager for macOS. Open <strong>Terminal</strong> (Spotlight → Terminal) and run:</div>
+            <div class="code-block">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Follow the prompts — it will ask for your macOS password. When done, verify:</div>
+            <div class="code-block">brew --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-warn">⚠️ On Apple Silicon (M1/M2/M3), Homebrew installs to <code>/opt/homebrew/</code> instead of <code>/usr/local/</code>. The installer will print a command to add to your shell profile (~/.zprofile) — run it, then restart Terminal, or commands won't be found.</div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Install Python 3</div>
+            <div class="step-desc">macOS ships with an old system Python — install a current version via Homebrew:</div>
+            <div class="code-block">brew install python<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify. On macOS, Homebrew registers it as <code>python3</code>:</div>
+            <div class="code-block">python3 --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Also confirm pip is available:</div>
+            <div class="code-block">pip3 --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-info">You should see <code>Python 3.12.x</code> and <code>pip 24.x</code>. If either says "not found", restart Terminal — Homebrew needs a fresh shell session to update PATH.</div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Install FFmpeg</div>
+            <div class="step-desc">Required for merging separate video and audio streams (needed for 1080p+ on YouTube):</div>
+            <div class="code-block">brew install ffmpeg<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify:</div>
+            <div class="code-block">ffmpeg -version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Install yt-dlp</div>
+            <div class="step-desc">Via Homebrew (recommended — stays updated with <code>brew upgrade</code>):</div>
+            <div class="code-block">brew install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Or via pip3:</div>
+            <div class="code-block">python -m pip install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify:</div>
+            <div class="code-block">python -m yt_dlp --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Optional: cookie support (LinkedIn, private content)</div>
+            <div class="code-block">python -m pip install yt-dlp[default]<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+
+        <div class="setup-step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <div class="step-title">Update everything later</div>
+            <div class="code-block">brew upgrade python ffmpeg yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-ok">You're ready! Go to Profiles → add a URL → generate your command.</div>
+          </div>
+        </div>
+
+      </div><!-- /os-mac -->
+
+      <!-- Linux -->
+      <div class="os-panel" id="os-linux">
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Install Python 3, pip &amp; FFmpeg</div>
+            <div class="step-desc">Open a terminal and run:</div>
+            <div class="code-block">sudo apt update && sudo apt install python3 python3-pip ffmpeg -y<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify Python and pip:</div>
+            <div class="code-block">python3 --version && pip3 --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-info">On non-Debian distros (Fedora, Arch, etc.) replace <code>apt</code> with <code>dnf</code> or <code>pacman -S</code>.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Install yt-dlp</div>
+            <div class="code-block">python -m pip install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Or the standalone binary (always latest):</div>
+            <div class="code-block">sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && sudo chmod a+rx /usr/local/bin/yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Verify</div>
+            <div class="code-block">python -m yt_dlp --version && ffmpeg -version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-ok">You're ready! Go to Profiles → add a URL → generate your command.</div>
+          </div>
+        </div>
+      </div><!-- /os-linux -->
+
+      <!-- Android / Termux -->
+      <div class="os-panel" id="os-android">
+        <div class="notice notice-info" style="margin-bottom:1rem">
+          yt-dlp runs natively on Android via <strong>Termux</strong> — a full Linux terminal emulator. Install it once, then use KZ Downloader to generate commands, copy them, and paste into Termux.
+        </div>
+        <div class="setup-step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">Install Termux from F-Droid</div>
+            <div class="step-desc">
+              Download from <a href="https://f-droid.org/en/packages/com.termux/" target="_blank">f-droid.org/packages/com.termux</a> — the Google Play version is outdated and unsupported. Install the APK, open Termux, and update packages:
+            </div>
+            <div class="code-block">pkg update && pkg upgrade -y<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">Install Python, pip &amp; FFmpeg</div>
+            <div class="code-block">pkg install python ffmpeg -y<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify:</div>
+            <div class="code-block">python --version && ffmpeg -version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <div class="step-title">Install yt-dlp</div>
+            <div class="code-block">python -m pip install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Verify:</div>
+            <div class="code-block">python -m yt_dlp --version<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <div class="step-title">Grant storage access (save to Downloads)</div>
+            <div class="step-desc">
+              Run this once — it shows an Android permission prompt to allow Termux access to your phone's storage:
+            </div>
+            <div class="code-block">termux-setup-storage<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="step-desc">Then set your output folder in Options to:</div>
+            <div class="code-block">/sdcard/Download/KZ Downloads<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <div class="step-title">Run commands from KZ Downloader</div>
+            <div class="step-desc">Add your URLs in Profiles → Output tab → tap <strong>📋 Copy</strong> or <strong>📤 Share</strong> → switch to Termux → paste → Enter.</div>
+            <div class="notice notice-ok">You're ready! Downloads land in your phone's Downloads folder.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <div class="step-title">Update yt-dlp later</div>
+            <div class="code-block">python -m pip install -U yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+          </div>
+        </div>
+      </div><!-- /os-android -->
+
+      <!-- iOS -->
+      <div class="os-panel" id="os-ios">
+        <div class="notice notice-warn" style="margin-bottom:1rem">
+          ⚠️ <strong>yt-dlp cannot run natively on iOS</strong> — Apple's sandbox prevents executing arbitrary binaries. However, there are two practical workflows:
+        </div>
+        <div class="setup-step">
+          <div class="step-num">A</div>
+          <div class="step-body">
+            <div class="step-title">SSH into a Mac or Linux machine</div>
+            <div class="step-desc">
+              If you have a Mac, Linux server, or Raspberry Pi with yt-dlp installed, you can SSH into it from your iPhone and run commands there. Good SSH clients for iOS:
+            </div>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">
+              <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank" style="font-size:12px">▶ Termius (free tier available)</a>
+              <a href="https://apps.apple.com/app/issh-ssh-vnc-console/id284984214" target="_blank" style="font-size:12px">▶ iSSH</a>
+            </div>
+            <div class="step-desc">Generate your command in KZ Downloader → <strong>Copy</strong> → paste in your SSH client terminal.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">B</div>
+          <div class="step-body">
+            <div class="step-title">Use a-Shell (limited, experimental)</div>
+            <div class="step-desc">
+              <a href="https://apps.apple.com/app/a-shell/id1473805438" target="_blank">a-Shell</a> is a terminal emulator for iOS that includes Python. yt-dlp can be installed but FFmpeg is unavailable, so only audio-only or pre-merged formats work. Not recommended for video.
+            </div>
+            <div class="code-block">python -m pip install yt-dlp<button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+            <div class="notice notice-warn">Without FFmpeg, 1080p/720p video+audio merging will fail. Use format <code style="font-size:11px">best[ext=mp4]</code> in Options instead.</div>
+          </div>
+        </div>
+        <div class="setup-step">
+          <div class="step-num">C</div>
+          <div class="step-body">
+            <div class="step-title">Self-hosted remote server</div>
+            <div class="step-desc">
+              Run yt-dlp on a VPS, NAS, or home server and trigger downloads remotely via SSH or a web UI like <a href="https://github.com/Tzahi12345/YoutubeDL-Material" target="_blank">YoutubeDL-Material</a>. KZ Downloader generates the commands; you paste them via SSH from iOS.
+            </div>
+            <div class="notice notice-ok">Tip: set your output folder in Options to the server's download path, not a local iOS path.</div>
+          </div>
+        </div>
+      </div><!-- /os-ios -->
+
+    </div><!-- /card -->
+
+    <div class="card">
+      <div class="card-title">Useful yt-dlp references</div>
+      <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
+        <a href="https://github.com/yt-dlp/yt-dlp" target="_blank">▶ yt-dlp GitHub (docs &amp; releases)</a>
+        <a href="https://github.com/yt-dlp/yt-dlp#format-selection" target="_blank">▶ Format selection reference</a>
+        <a href="https://github.com/yt-dlp/yt-dlp#output-template" target="_blank">▶ Output template variables</a>
+        <a href="https://github.com/yt-dlp/yt-dlp#cookies" target="_blank">▶ Cookies &amp; authentication docs</a>
+      </div>
+    </div>
+
+  </div><!-- /setup panel -->
+
+</div><!-- /app-wrap -->
+
+<script>
+/* ─── STATE ───────────────────────────────────────────────── */
+let profiles = [];
+let activeFlags = new Set();
+let outTab = 'terminal';
+let currentDevice = 'windows'; // 'windows' | 'mac' | 'linux' | 'android' | 'ios'
+
+/* ─── STORAGE ─────────────────────────────────────────────── */
+const STORAGE_KEY  = 'kz-downloader-profiles';
+const OPTS_KEY     = 'kz-downloader-opts';
+const DEVICE_KEY   = 'kz-device';
+
+function saveProfiles(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profiles)); flashSaved(); } catch(e){}
+}
+function loadProfiles(){
+  try { const raw = localStorage.getItem(STORAGE_KEY); if(raw) profiles = JSON.parse(raw); } catch(e){ profiles = []; }
+}
+function saveOpts(){
+  try {
+    localStorage.setItem(OPTS_KEY, JSON.stringify({
+      outdir:     document.getElementById('outdir').value,
+      format:     document.getElementById('format-sel').value,
+      tmpl:       document.getElementById('tmpl-custom').value,
+      dateFilter: document.getElementById('date-filter').value,
+      saveMode:   (document.querySelector('[name=savemode]:checked')||{value:'fixed'}).value,
+    }));
+  } catch(e){}
+}
+function loadOpts(){
+  try {
+    const raw = localStorage.getItem(OPTS_KEY);
+    if(!raw) return;
+    const o = JSON.parse(raw);
+    if(o.outdir)      document.getElementById('outdir').value = o.outdir;
+    if(o.format)      document.getElementById('format-sel').value = o.format;
+    if(o.tmpl){ document.getElementById('tmpl-custom').value = o.tmpl; document.getElementById('tmpl-sel').value = 'custom'; }
+    if(o.dateFilter)  document.getElementById('date-filter').value = o.dateFilter;
+    if(o.saveMode){
+      const r = document.querySelector(`[name=savemode][value="${o.saveMode}"]`);
+      if(r) r.checked = true;
+    }
+    applySaveMode();
+  } catch(e){}
+}
+function flashSaved(){
+  const el = document.getElementById('save-indicator');
+  if(!el) return;
+  el.style.opacity='1'; clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 1800);
+}
+function clearSavedData(){
+  if(!confirm('Remove all saved profiles from storage? This cannot be undone.')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+  profiles = []; renderProfiles(); checkLinkedIn(); regenerate();
+}
+
+/* ─── DEVICE CONFIG ───────────────────────────────────────── */
+const DEVICE_CONFIG = {
+  windows: {
+    label: 'Windows',
+    terminalLabel: 'Command Prompt',
+    outdirDefault: 'D:/KZ Downloads',
+    outdirHint: 'Windows path — use backslashes or forward slashes, e.g. D:/KZ Downloads',
+    showBatch: true,
+    showLaunchCmd: true,
+    showShare: false,
+    showDownload: true,
+    setupOS: 'win',
+    bannerClass: '',
+    bannerText: '',
+    iosWarning: false,
+  },
+  mac: {
+    label: 'macOS',
+    terminalLabel: 'Terminal',
+    outdirDefault: '~/Downloads/KZ Downloads',
+    outdirHint: 'macOS path — ~ expands to your home folder',
+    showBatch: false,
+    showLaunchCmd: false,
+    showShare: false,
+    showDownload: true,
+    setupOS: 'mac',
+    bannerClass: 'info',
+    bannerText: '🍎 macOS mode — paste generated commands into <strong>Terminal.app</strong> or iTerm2.',
+    iosWarning: false,
+  },
+  linux: {
+    label: 'Linux',
+    terminalLabel: 'Terminal',
+    outdirDefault: '~/Downloads/KZ Downloads',
+    outdirHint: 'Linux path — ~ expands to your home directory',
+    showBatch: false,
+    showLaunchCmd: false,
+    showShare: false,
+    showDownload: true,
+    setupOS: 'linux',
+    bannerClass: 'info',
+    bannerText: '🐧 Linux mode — paste generated commands into your terminal emulator.',
+    iosWarning: false,
+  },
+  android: {
+    label: 'Android',
+    terminalLabel: 'Termux',
+    outdirDefault: '/sdcard/Download/KZ Downloads',
+    outdirHint: 'Android path — requires Termux storage access (run termux-setup-storage once)',
+    showBatch: false,
+    showLaunchCmd: false,
+    showShare: true,
+    showDownload: true,
+    setupOS: 'android',
+    bannerClass: 'info',
+    bannerText: '🤖 Android mode — use <strong>📋 Copy</strong> or <strong>📤 Share</strong> to send commands to <strong>Termux</strong>. See Setup Guide → Android for one-time setup.',
+    iosWarning: false,
+  },
+  ios: {
+    label: 'iOS',
+    terminalLabel: 'Terminal (SSH)',
+    outdirDefault: '~/Downloads/KZ Downloads',
+    outdirHint: 'iOS: yt-dlp cannot run natively. This path should be on your remote Mac/Linux/server.',
+    showBatch: false,
+    showLaunchCmd: false,
+    showShare: true,
+    showDownload: false,
+    setupOS: 'ios',
+    bannerClass: 'warn',
+    bannerText: '📱 iOS mode — yt-dlp cannot run directly on iPhone/iPad. <strong>Copy</strong> or <strong>Share</strong> the command and paste it into an SSH client (e.g. Termius) connected to a Mac/Linux machine. See Setup Guide → iOS.',
+    iosWarning: true,
+  },
+};
+
+/* ─── DETECT DEVICE FROM UA ───────────────────────────────── */
+function detectDeviceFromUA(){
+  const ua = navigator.userAgent;
+  if(/android/i.test(ua)) return 'android';
+  if(/iphone|ipad|ipod/i.test(ua)) return 'ios';
+  if(/mac os x/i.test(ua) && !/iphone|ipad/i.test(ua)) return 'mac';
+  if(/linux/i.test(ua) && !/android/i.test(ua)) return 'linux';
+  return 'windows';
+}
+
+/* ─── SET DEVICE ──────────────────────────────────────────── */
+function setDevice(dev, btnEl){
+  currentDevice = dev;
+  try { localStorage.setItem(DEVICE_KEY, dev); } catch(e){}
+
+  // Update selector buttons
+  document.querySelectorAll('.dev-btn').forEach(b => b.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  else {
+    const b = document.querySelector(`.dev-btn[data-dev="${dev}"]`);
+    if(b) b.classList.add('active');
+  }
+
+  const cfg = DEVICE_CONFIG[dev];
+
+  // Platform banner
+  const banner = document.getElementById('platform-banner');
+  if(cfg.bannerText){
+    banner.className = 'platform-banner visible ' + cfg.bannerClass;
+    banner.innerHTML = cfg.bannerText;
+  } else {
+    banner.className = 'platform-banner';
+    banner.innerHTML = '';
+  }
+
+  // Terminal label
+  const lbl = document.getElementById('term-tab-label');
+  if(lbl){
+    const tabLabels = {terminal: cfg.terminalLabel, batch: 'Batch Script', args: 'Args File'};
+    lbl.textContent = tabLabels[outTab] || cfg.terminalLabel;
+  }
+
+  // Batch tab visibility
+  const batchTab = document.getElementById('outtab-batch');
+  if(batchTab){
+    if(cfg.showBatch){ batchTab.style.display=''; }
+    else {
+      batchTab.style.display='none';
+      // If currently on batch tab, switch to terminal
+      if(outTab==='batch'){
+        outTab='terminal';
+        document.querySelectorAll('.out-tab').forEach(b=>b.classList.remove('active'));
+        const termTab = document.getElementById('outtab-terminal');
+        if(termTab) termTab.classList.add('active');
+        if(lbl) lbl.textContent = cfg.terminalLabel;
+        regenerate();
+      }
+    }
+  }
+
+  // Action buttons
+  const btnLaunch = document.getElementById('btn-launch-cmd');
+  const btnShare  = document.getElementById('btn-share');
+  const btnDl     = document.getElementById('btn-download');
+  if(btnLaunch) btnLaunch.style.display = cfg.showLaunchCmd ? '' : 'none';
+  if(btnShare)  btnShare.style.display  = cfg.showShare     ? '' : 'none';
+  if(btnDl)     btnDl.style.display     = cfg.showDownload  ? '' : 'none';
+
+  // Per-device output notices
+  ['windows','mac','linux','android','ios'].forEach(d => {
+    const el = document.getElementById('output-notice-'+d);
+    if(el) el.style.display = (d===dev) ? '' : 'none';
+  });
+
+  // Outdir default — only set if user hasn't customised (check if it matches any known default)
+  const outdirEl = document.getElementById('outdir');
+  const hintEl   = document.getElementById('outdir-hint');
+  const savedOpts = (() => { try{ return JSON.parse(localStorage.getItem(OPTS_KEY)||'{}'); }catch(e){return {};} })();
+  const allDefaults = Object.values(DEVICE_CONFIG).map(c=>c.outdirDefault);
+  if(!savedOpts.outdir || allDefaults.includes(outdirEl.value)){
+    outdirEl.value = cfg.outdirDefault;
+  }
+  if(hintEl) hintEl.textContent = cfg.outdirHint;
+  applySaveMode();
+
+  // Setup Guide — sync OS panel
+  syncSetupOS(cfg.setupOS);
+
+  // Regenerate output with updated labels
+  regenerate();
+}
+
+/* ─── SYNC SETUP GUIDE OS TAB ─────────────────────────────── */
+function syncSetupOS(osKey){
+  // Map device -> os panel id
+  const osMap = {win:'os-win', mac:'os-mac', linux:'os-linux', android:'os-android', ios:'os-ios'};
+  const panelId = osMap[osKey] || 'os-win';
+  document.querySelectorAll('.os-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.os-tab').forEach(b=>b.classList.remove('active'));
+  const panel = document.getElementById(panelId);
+  if(panel) panel.classList.add('active');
+  // Map os panel to tab button id
+  const tabMap = {win:'setup-os-windows', mac:'setup-os-mac', linux:'setup-os-linux', android:'setup-os-android', ios:'setup-os-ios'};
+  const tab = document.getElementById(tabMap[osKey]);
+  if(tab) tab.classList.add('active');
+}
+
+/* ─── PRESETS ─────────────────────────────────────────────── */
+const FLAGS = [
+  {key:"thumb",  label:"Embed thumbnail",        flag:"--embed-thumbnail"},
+  {key:"meta",   label:"Add metadata",            flag:"--add-metadata"},
+  {key:"sub",    label:"Embed subtitles",         flag:"--write-auto-sub --embed-subs"},
+  {key:"pl",     label:"Full playlist/channel",   flag:"--yes-playlist"},
+  {key:"nopl",   label:"Single video only",       flag:"--no-playlist"},
+  {key:"sleep",  label:"Rate limit (1–3 s)",      flag:"--sleep-interval 1 --max-sleep-interval 3"},
+  {key:"cookie", label:"Cookies from Chrome",     flag:"--cookies-from-browser chrome"},
+  {key:"cfrag",  label:"3 parallel fragments",    flag:"--concurrent-fragments 3"},
+  {key:"sb",     label:"Skip sponsored segments", flag:"--sponsorblock-remove sponsor"},
+  {key:"dateaf", label:"After date filter",       flag:"--dateafter {{date}}"},
+];
+
+/* ─── THEME ───────────────────────────────────────────────── */
+function toggleTheme(){
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-btn').innerHTML =
+    isDark ? '<span class="theme-icon">🌙</span><span id="theme-label">Dark mode</span>'
+           : '<span class="theme-icon">☀️</span><span id="theme-label">Light mode</span>';
+}
+
+/* ─── TABS ────────────────────────────────────────────────── */
+function switchTab(id, el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='presets') renderPresets();
+  if(id==='history') renderHistory();
+}
+
+function setOutTab(t, el){
+  outTab = t;
+  document.querySelectorAll('.out-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const cfg = DEVICE_CONFIG[currentDevice];
+  const labels = {terminal: cfg.terminalLabel, batch:'Batch Script', args:'Args File'};
+  document.getElementById('term-tab-label').textContent = labels[t];
+  regenerate();
+}
+
+function setOS(id, el){
+  document.querySelectorAll('.os-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.os-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  const panel = document.getElementById('os-'+id);
+  if(panel) panel.classList.add('active');
+}
+
+/* ─── PRESETS STORAGE ─────────────────────────────────────── */
+const PRESETS_KEY = 'kz-presets';
+let customPresets = [];
+let editingPresetIdx = null;
+
+const BUILTIN_PRESETS = [
+  {brand:"Tata Motors",    handle:"@TataMotors",              plat:"YouTube",   dot:"yt", url:"https://www.youtube.com/@TataMotors/videos"},
+  {brand:"Tata Motors",    handle:"tatamotors",               plat:"Instagram", dot:"ig", url:"https://www.instagram.com/tatamotors/"},
+  {brand:"Tata Motors",    handle:"TataMotors",               plat:"Facebook",  dot:"fb", url:"https://www.facebook.com/TataMotors/videos"},
+  {brand:"Tata Motors",    handle:"Tata Motors",              plat:"LinkedIn",  dot:"li", url:"https://www.linkedin.com/company/tata-motors/posts/?feedView=videos"},
+  {brand:"Tata Trucks",    handle:"@TataMotorsTrucks",        plat:"YouTube",   dot:"yt", url:"https://www.youtube.com/@TataMotorsTrucks/videos"},
+  {brand:"Tata Commercial",handle:"Tata Commercial Vehicles", plat:"Facebook",  dot:"fb", url:"https://www.facebook.com/TataMotorsCommercialVehicles/videos"},
+  {brand:"Tata Commercial",handle:"Tata Commercial Vehicles", plat:"LinkedIn",  dot:"li", url:"https://www.linkedin.com/company/tata-motors-commercial-vehicles/posts/?feedView=videos"},
+  {brand:"Tata SCV",       handle:"@TataSmallCVs",            plat:"YouTube",   dot:"yt", url:"https://www.youtube.com/@TataSmallCVs/videos"},
+];
+
+function loadPresets(){
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    customPresets = raw ? JSON.parse(raw) : [...BUILTIN_PRESETS];
+  } catch(e){ customPresets = [...BUILTIN_PRESETS]; }
+}
+function savePresetsStore(){
+  try { localStorage.setItem(PRESETS_KEY, JSON.stringify(customPresets)); } catch(e){}
+}
+function allPresets(){ return customPresets; }
+
+/* ─── RENDER PRESETS ──────────────────────────────────────── */
+function renderPresets(){
+  const list = allPresets();
+  document.getElementById('preset-count').textContent = list.length;
+  const g = document.getElementById('presets-grid');
+  if(!list.length){
+    g.innerHTML = '<div class="empty-state"><div class="empty-icon">⭐</div>No presets yet. Add one above.</div>';
+    return;
+  }
+  g.innerHTML = list.map((p,i)=>`
+    <div class="preset-btn" style="position:relative">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:4px">
+        <div style="min-width:0">
+          <div class="preset-brand">${escHtml(p.brand)}</div>
+          <div class="preset-handle">${escHtml(p.handle)}</div>
+          <div class="preset-plat" style="margin-top:4px"><span class="plat-badge plat-${p.dot}">${p.plat}</span></div>
+        </div>
+        <div style="display:flex;gap:3px;flex-shrink:0">
+          <button class="hist-act-btn" title="Edit" onclick="event.stopPropagation();openPresetModal(${i})">✏️</button>
+          <button class="hist-act-btn" style="color:var(--danger-text)" title="Delete" onclick="event.stopPropagation();deletePreset(${i})">✕</button>
+        </div>
+      </div>
+      <button class="btn btn-accent" style="width:100%;margin-top:8px;font-size:11px;justify-content:center" onclick="addPreset(${i})">+ Add to queue</button>
+    </div>`).join('');
+}
+
+function addPreset(i){
+  addToQueue(allPresets()[i].url);
+  // Switch back to profiles so user sees it land in queue
+  const profilesTab = document.querySelector('.nav-tab');
+  switchTab('profiles', profilesTab);
+}
+
+function deletePreset(i){
+  if(!confirm('Delete this preset?')) return;
+  customPresets.splice(i,1);
+  savePresetsStore();
+  renderPresets();
+}
+
+function clearAllPresets(){
+  if(!confirm('Delete ALL presets? This cannot be undone.')) return;
+  customPresets = [];
+  savePresetsStore();
+  renderPresets();
+}
+
+/* ─── PRESET MODAL ────────────────────────────────────────── */
+function openPresetModal(idx){
+  editingPresetIdx = (idx !== undefined) ? idx : null;
+  const modal = document.getElementById('preset-modal');
+  document.getElementById('preset-modal-title').textContent = editingPresetIdx !== null ? 'Edit preset' : 'Add preset';
+  if(editingPresetIdx !== null){
+    const p = customPresets[editingPresetIdx];
+    document.getElementById('pm-brand').value  = p.brand;
+    document.getElementById('pm-handle').value = p.handle;
+    document.getElementById('pm-url').value    = p.url;
+    document.getElementById('pm-plat').value   = p.dot;
+  } else {
+    document.getElementById('pm-brand').value  = '';
+    document.getElementById('pm-handle').value = '';
+    document.getElementById('pm-url').value    = '';
+    document.getElementById('pm-plat').value   = 'yt';
+  }
+  modal.style.display = 'flex';
+  // Auto-detect platform from URL as user types
+  document.getElementById('pm-url').oninput = function(){
+    const dot = detectPlatform(this.value);
+    document.getElementById('pm-plat').value = dot;
+  };
+}
+
+function closePresetModal(){
+  document.getElementById('preset-modal').style.display = 'none';
+  editingPresetIdx = null;
+}
+
+function savePresetModal(){
+  const brand  = document.getElementById('pm-brand').value.trim();
+  const handle = document.getElementById('pm-handle').value.trim();
+  const url    = document.getElementById('pm-url').value.trim();
+  const dot    = document.getElementById('pm-plat').value;
+  const platNames = {yt:'YouTube',ig:'Instagram',fb:'Facebook',li:'LinkedIn',tw:'Twitter / X',gen:'Other'};
+  if(!brand || !url){ alert('Brand name and URL are required.'); return; }
+  const entry = {brand, handle, plat: platNames[dot]||dot, dot, url};
+  if(editingPresetIdx !== null){
+    customPresets[editingPresetIdx] = entry;
+  } else {
+    customPresets.push(entry);
+  }
+  savePresetsStore();
+  closePresetModal();
+  renderPresets();
+}
+
+/* Close modal on backdrop click */
+document.getElementById('preset-modal').addEventListener('click', function(e){
+  if(e.target === this) closePresetModal();
+});
+
+/* ─── EXPORT / IMPORT PRESETS ─────────────────────────────── */
+function exportPresets(){
+  if(!customPresets.length){ alert('No presets to export.'); return; }
+  const blob = new Blob([JSON.stringify(customPresets, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'kz-presets.json';
+  a.click();
+}
+function importPresets(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if(!Array.isArray(imported)) throw new Error('Not an array');
+      let added = 0;
+      imported.forEach(p => {
+        if(!p.brand || !p.url) return;
+        if(!customPresets.find(x=>x.url===p.url)){ customPresets.push(p); added++; }
+      });
+      savePresetsStore(); renderPresets();
+      alert(`Imported ${added} preset(s) (${imported.length - added} duplicate(s) skipped).`);
+    } catch(err){ alert('Import failed: invalid JSON.\n'+err.message); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+/* ─── DETECT URL PLATFORM ─────────────────────────────────── */
+function detectPlatform(url){
+  if(url.includes('youtube.com')||url.includes('youtu.be')) return 'yt';
+  if(url.includes('instagram.com')) return 'ig';
+  if(url.includes('facebook.com')||url.includes('fb.watch')) return 'fb';
+  if(url.includes('linkedin.com')) return 'li';
+  if(url.includes('twitter.com')||url.includes('x.com')) return 'tw';
+  return 'gen';
+}
+const platLabel = {yt:'YouTube',ig:'Instagram',fb:'Facebook',li:'LinkedIn',tw:'Twitter/X',gen:'Generic'};
+
+/* ─── PROFILE QUEUE ───────────────────────────────────────── */
+function addToQueue(u){
+  u = u.trim();
+  if(!u) return;
+  if(profiles.includes(u)){ alert('Already in queue.'); return; }
+  profiles.push(u);
+  renderProfiles(); checkLinkedIn(); saveProfiles();
+}
+document.getElementById('profile-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addProfile(); });
+function addProfile(){
+  const inp = document.getElementById('profile-input');
+  addToQueue(inp.value); inp.value='';
+}
+function removeProfile(i){
+  profiles.splice(i,1); renderProfiles(); checkLinkedIn(); saveProfiles();
+}
+function checkLinkedIn(){
+  const has = profiles.some(u=>u.includes('linkedin.com'));
+  document.getElementById('li-notice').style.display = has ? 'block' : 'none';
+}
+function renderProfiles(){
+  const el = document.getElementById('profile-list');
+  document.getElementById('profile-count').textContent = profiles.length;
+  if(!profiles.length){
+    el.innerHTML='<div class="empty-state"><div class="empty-icon">🔗</div>No profiles added yet.</div>';
+    regenerate();
+    return;
+  }
+  el.innerHTML = profiles.map((u,i)=>{
+    const dot = detectPlatform(u);
+    return `<div class="profile-item">
+      <span class="plat-badge plat-${dot}">${platLabel[dot]}</span>
+      <span class="profile-url" title="${u}">${u}</span>
+      <button class="profile-del" onclick="removeProfile(${i})" title="Remove">✕</button>
+    </div>`;
+  }).join('');
+  regenerate();
+}
+
+/* ─── FLAGS ───────────────────────────────────────────────── */
+function renderFlags(){
+  document.getElementById('flags-wrap').innerHTML = FLAGS.map(f=>`
+    <div class="flag-chip ${activeFlags.has(f.key)?'on':''}" onclick="toggleFlag('${f.key}')">
+      <span class="flag-pip"></span>${f.label}
+    </div>`).join('');
+}
+function toggleFlag(k){
+  activeFlags.has(k) ? activeFlags.delete(k) : activeFlags.add(k);
+  renderFlags();
+}
+
+/* ─── OPTIONS SYNC ────────────────────────────────────────── */
+function syncTemplate(){
+  const v = document.getElementById('tmpl-sel').value;
+  if(v!=='custom') document.getElementById('tmpl-custom').value = v;
+}
+document.getElementById('tmpl-custom').addEventListener('input', ()=>{
+  document.getElementById('tmpl-sel').value = 'custom';
+});
+function updateMode(){
+  const isAll = document.querySelector('[name=dlmode]:checked').value === 'all';
+  document.getElementById('mode-hint').innerHTML = isAll
+    ? '<strong>Download all:</strong> fetches every video from the profile/channel. Use date filters or playlist flags below to limit scope.'
+    : '<strong>List only:</strong> prints all video titles and URLs without downloading. Useful for previewing a channel first.';
+}
+
+/* ─── SAVE MODE ───────────────────────────────────────────── */
+function applySaveMode(){
+  const saveMode = (document.querySelector('[name=savemode]:checked')||{value:'fixed'}).value;
+  const outdirEl = document.getElementById('outdir');
+  const hintEl   = document.getElementById('outdir-hint');
+  const isAsk = saveMode === 'ask';
+  outdirEl.disabled = isAsk;
+  outdirEl.style.opacity = isAsk ? '0.4' : '';
+  outdirEl.style.cursor  = isAsk ? 'not-allowed' : '';
+  if(hintEl) hintEl.style.display = isAsk ? 'none' : '';
+}
+function updateSaveMode(){
+  applySaveMode();
+  saveOpts();
+  regenerate();
+}
+
+/* ─── BUILD COMMAND ───────────────────────────────────────── */
+function getOpts(){
+  const fmt  = document.getElementById('format-sel').value;
+  const dir  = (document.getElementById('outdir').value.trim()||'.').replace(/[/\\]$/,'');
+  const tmpl = document.getElementById('tmpl-sel').value === 'custom'
+               ? document.getElementById('tmpl-custom').value
+               : document.getElementById('tmpl-sel').value;
+  const dateAfter = document.getElementById('date-filter').value.trim();
+  const mode = document.querySelector('[name=dlmode]:checked').value;
+  const saveMode = (document.querySelector('[name=savemode]:checked')||{value:'fixed'}).value;
+  const flagArr = [...activeFlags].map(k=>{
+    let f = FLAGS.find(x=>x.key===k).flag;
+    if(k==='dateaf') f = dateAfter ? `--dateafter ${dateAfter}` : '';
+    return f;
+  }).filter(Boolean);
+  return {fmt, dir, tmpl, mode, flagArr, saveMode};
+}
+
+function buildCmd(url){
+  const {fmt,dir,tmpl,mode,flagArr,saveMode} = getOpts();
+  if(mode==='list'){
+    return `python -m yt_dlp --flat-playlist --print "%(title)s | %(url)s" "${url}"`;
+  }
+  if(saveMode === 'ask'){
+    const parts = ['python -m yt_dlp', `-f "${fmt}"`, '--no-mtime', ...flagArr, `"${url}"`];
+    return parts.join(' ');
+  }
+  const outpath = dir + '/' + tmpl;
+  const parts = ['python -m yt_dlp', `-f "${fmt}"`, `-o "${outpath}"`, ...flagArr, `"${url}"`];
+  return parts.join(' ');
+}
+
+function regenerate(){
+  const el = document.getElementById('term-body');
+  if(!profiles.length){
+    el.innerHTML='<span style="color:#444;font-style:italic">Add profiles in the Profiles tab to generate commands.</span>';
+    return;
+  }
+  let text = '';
+  if(outTab==='terminal'){
+    text = profiles.map(u=>buildCmd(u)).join('\n\n');
+  } else if(outTab==='batch'){
+    const {dir, saveMode} = getOpts();
+    const folderComment = saveMode === 'ask' ? 'rem Output folder: (prompted at runtime / working directory)' : `rem Output folder: ${dir}`;
+    text = [
+      '@echo off','setlocal','',
+      'rem KZ Downloader — generated batch script',
+      folderComment,'',
+      ...profiles.map(u=>buildCmd(u)),'',
+      'echo.','echo All done!','pause'
+    ].join('\n');
+  } else {
+    const {fmt,dir,tmpl,mode,flagArr,saveMode} = getOpts();
+    if(mode==='list'){
+      text = ['--flat-playlist','--print','%(title)s | %(url)s',...profiles].join('\n');
+    } else if(saveMode === 'ask'){
+      text = [`-f`,fmt,`--no-mtime`,...flagArr.flatMap(f=>f.split(' ').filter(Boolean)),...profiles].join('\n');
+    } else {
+      text = [`-f`,fmt,`-o`,`${dir}/${tmpl}`,...flagArr.flatMap(f=>f.split(' ').filter(Boolean)),...profiles].join('\n');
+    }
+  }
+  el.textContent = text;
+  // Log to history
+  profiles.forEach(u => {
+    logToHistory({type:'command', url:u, cmd:buildCmd(u), ts:Date.now()});
+    logToHistory({type:'link', url:u, ts:Date.now()});
+  });
+  if(document.getElementById('panel-history').classList.contains('active')) renderHistory();
+}
+
+/* ─── SAFE CLIPBOARD ──────────────────────────────────────── */
+function safeCopy(text, onSuccess){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(onSuccess).catch(()=>execCmdCopy(text,onSuccess));
+  } else {
+    execCmdCopy(text, onSuccess);
+  }
+}
+function execCmdCopy(text, onSuccess){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;font-size:16px';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { if(document.execCommand('copy') && onSuccess) onSuccess(); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ─── COPY CMD ────────────────────────────────────────────── */
+function copyCmd(){
+  const text = document.getElementById('term-body').textContent;
+  if(!text||text.includes('Add profiles')) return;
+  safeCopy(text, ()=>{
+    const btn = document.getElementById('copy-btn');
+    btn.textContent='✓ Copied';
+    setTimeout(()=>{ btn.textContent='📋 Copy'; }, 2000);
+  });
+}
+
+/* ─── SHARE CMD (Web Share API) ──────────────────────────── */
+function shareCmd(){
+  const text = document.getElementById('term-body').textContent;
+  if(!text||text.includes('Add profiles')) return;
+  if(navigator.share){
+    navigator.share({title:'KZ Downloader Command', text}).catch(()=>{});
+  } else {
+    safeCopy(text, ()=>{
+      const btn = document.getElementById('btn-share');
+      if(btn){ const old=btn.textContent; btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent=old,2000); }
+    });
+  }
+}
+
+/* ─── DOWNLOAD FILE ───────────────────────────────────────── */
+function downloadFile(){
+  regenerate();
+  const text = document.getElementById('term-body').textContent;
+  if(!text||text.includes('Add profiles')) return;
+  const names = {terminal:'kz-commands.txt', batch:'kz-download.bat', args:'kz-args.txt'};
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text],{type:'text/plain'}));
+  a.download = names[outTab];
+  a.click();
+}
+
+/* ─── LAUNCH IN CMD ───────────────────────────────────────── */
+function launchBat(){
+  regenerate();
+  const text = document.getElementById('term-body').textContent;
+  if(!text||text.includes('Add profiles')){ alert('Add profiles first.'); return; }
+  const cmds = profiles.map(u=>buildCmd(u)).join('\n');
+  const bat = [
+    '@echo off','setlocal','',
+    'rem KZ Downloader — CMD Launcher','',
+    cmds,'','echo.','echo All done! Press any key to close.','pause'
+  ].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([bat],{type:'text/plain'}));
+  a.download = 'KZ-Launch.bat';
+  a.click();
+}
+
+/* ─── CLEAR ───────────────────────────────────────────────── */
+function clearAll(){
+  if(!confirm('Clear all profiles?')) return;
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+  profiles=[]; renderProfiles(); checkLinkedIn(); regenerate();
+}
+
+/* ─── CODE COPY (setup tab) ───────────────────────────────── */
+function copyCode(btn){
+  const block = btn.parentElement;
+  const text = block.textContent.replace('Copy','').trim();
+  safeCopy(text, ()=>{ btn.textContent='✓'; setTimeout(()=>btn.textContent='Copy',1500); });
+}
+
+/* ─── LIVE REGEN ON OPTION CHANGE ────────────────────────── */
+['format-sel','outdir','tmpl-custom','date-filter'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', saveOpts);
+});
+document.getElementById('format-sel').addEventListener('change', saveOpts);
+document.querySelectorAll('[name=dlmode]').forEach(r=>r.addEventListener('change',updateMode));
+
+/* ─── HISTORY SYSTEM ──────────────────────────────────────── */
+const HIST_KEY = 'kz-history';
+let histType = 'links';
+let histData = [];
+
+function loadHistory(){
+  try { const raw=localStorage.getItem(HIST_KEY); histData=raw?JSON.parse(raw):[]; } catch(e){ histData=[]; }
+}
+function saveHistory(){
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(histData)); } catch(e){}
+}
+function logToHistory(entry){
+  loadHistory();
+  const now=Date.now();
+  const recent=histData.find(h=>h.url===entry.url&&h.type===entry.type&&(now-h.ts)<5000);
+  if(recent) return;
+  entry.id='h'+now+Math.random().toString(36).slice(2,6);
+  histData.unshift(entry);
+  if(histData.length>500) histData=histData.slice(0,500);
+  saveHistory();
+}
+function setHistType(t, el){
+  histType=t;
+  document.querySelectorAll('.hist-type').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+function renderHistory(){
+  loadHistory();
+  const q=(document.getElementById('hist-search')||{value:''}).value.toLowerCase();
+  const filtered=histData.filter(h=>h.type===(histType==='links'?'link':'command')
+    &&(!q||h.url.toLowerCase().includes(q)||(h.cmd||'').toLowerCase().includes(q)));
+  const el=document.getElementById('hist-list');
+  if(!filtered.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">${histType==='links'?'🔗':'💻'}</div>${q?'No results for "'+q+'".':'No '+histType+' recorded yet.'}</div>`;
+    return;
+  }
+  el.innerHTML=filtered.map(h=>{
+    const dot=detectPlatform(h.url);
+    const date=new Date(h.ts);
+    const dateStr=date.toLocaleDateString()+' '+date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const cmdHtml=h.type==='command'&&h.cmd?`<div class="hist-cmd">${escHtml(h.cmd)}</div>`:'';
+    return `<div class="hist-item" id="hi-${h.id}">
+      <input type="checkbox" class="hist-cb" data-id="${h.id}" />
+      <div class="hist-body">
+        <div class="hist-plat"><span class="plat-badge plat-${dot}">${platLabel[dot]}</span></div>
+        <div class="hist-url" title="${escHtml(h.url)}">${escHtml(h.url)}</div>
+        ${cmdHtml}
+        <div class="hist-meta"><span>🕓 ${dateStr}</span></div>
+      </div>
+      <div class="hist-actions">
+        <button class="hist-act-btn" onclick="copyHistItem('${escAttr(h.url)}')">📋</button>
+        ${h.cmd?`<button class="hist-act-btn" onclick="copyHistItem('${escAttr(h.cmd)}')">Copy cmd</button>`:''}
+        <button class="hist-act-btn" onclick="addToQueue('${escAttr(h.url)}');switchTab('profiles',document.querySelector('.nav-tab'))">+ Queue</button>
+        <button class="hist-act-btn" style="color:var(--danger-text)" onclick="deleteHistItem('${h.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s){ return String(s).replace(/'/g,'&#39;').replace(/\\/g,'\\\\'); }
+function copyHistItem(text){ safeCopy(text, ()=>{}); }
+function deleteHistItem(id){
+  loadHistory(); histData=histData.filter(h=>h.id!==id); saveHistory(); renderHistory();
+}
+function deleteSelected(){
+  const ids=new Set([...document.querySelectorAll('.hist-cb:checked')].map(cb=>cb.dataset.id));
+  if(!ids.size){ alert('Select items first.'); return; }
+  if(!confirm(`Delete ${ids.size} selected item(s)?`)) return;
+  loadHistory(); histData=histData.filter(h=>!ids.has(h.id)); saveHistory(); renderHistory();
+}
+function selectAllHist(){
+  const cbs=document.querySelectorAll('.hist-cb');
+  const allChecked=[...cbs].every(cb=>cb.checked);
+  cbs.forEach(cb=>cb.checked=!allChecked);
+  document.getElementById('sel-all-btn').textContent=allChecked?'☐ Select all':'☑ Deselect all';
+}
+function exportSelected(){
+  loadHistory();
+  const checked=[...document.querySelectorAll('.hist-cb:checked')].map(cb=>cb.dataset.id);
+  let toExport;
+  if(checked.length){ const ids=new Set(checked); toExport=histData.filter(h=>ids.has(h.id)); }
+  else {
+    toExport=histData.filter(h=>h.type===(histType==='links'?'link':'command'));
+    if(!toExport.length){ alert('Nothing to export.'); return; }
+  }
+  const blob=new Blob([JSON.stringify(toExport,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`kz-history-${histType}-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+function importHistory(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try {
+      const imported=JSON.parse(ev.target.result);
+      if(!Array.isArray(imported)) throw new Error('Not an array');
+      loadHistory();
+      let added=0;
+      imported.forEach(entry=>{
+        if(!entry.id||!entry.url||!entry.type) return;
+        if(!histData.find(h=>h.id===entry.id)){ histData.push(entry); added++; }
+      });
+      histData.sort((a,b)=>b.ts-a.ts);
+      if(histData.length>500) histData=histData.slice(0,500);
+      saveHistory(); renderHistory();
+      alert(`Imported ${added} entries (${imported.length-added} duplicates skipped).`);
+    } catch(err){ alert('Import failed: invalid JSON or wrong format.\n'+err.message); }
+    e.target.value='';
+  };
+  reader.readAsText(file);
+}
+function clearAllHistory(){
+  if(!confirm('Delete ALL history permanently? This cannot be undone.')) return;
+  histData=[]; saveHistory(); renderHistory();
+}
+
+/* ─── MEDIA SCANNER ───────────────────────────────────────────────────── */
+
+const SCAN_PLATFORMS = [
+  { rx:/youtube\.com|youtu\.be/,    dot:'yt'  },
+  { rx:/instagram\.com/,            dot:'ig'  },
+  { rx:/facebook\.com|fb\.watch/,   dot:'fb'  },
+  { rx:/twitter\.com|x\.com/,       dot:'tw'  },
+  { rx:/linkedin\.com/,             dot:'li'  },
+  { rx:/vimeo\.com/,                dot:'gen' },
+  { rx:/tiktok\.com/,               dot:'gen' },
+  { rx:/twitch\.tv/,                dot:'gen' },
+  { rx:/soundcloud\.com/,           dot:'gen' },
+  { rx:/dailymotion\.com/,          dot:'gen' },
+];
+
+// Fix: define label map locally — never rely on an external platLabel variable
+const SCAN_PLAT_LABEL = {yt:'YouTube', ig:'Instagram', fb:'Facebook', li:'LinkedIn', tw:'Twitter/X'};
+
+const SCAN_MEDIA_EXTS = /\.(mp4|webm|m4v|mov|avi|mkv|mp3|m4a|ogg|flac|wav)(\?[^"']*)?$/i;
+
+let scanResults = []; // session-only; no localStorage
+
+// Fix: resolve dot safely from SCAN_PLATFORMS, never delegate to detectPlatform()
+// (avoids coupling to whatever format detectPlatform() returns)
+function scanDot(url){
+  return (SCAN_PLATFORMS.find(p => p.rx.test(url)) || {dot:'gen'}).dot;
+}
+
+function scanMedia(){
+  const url = (document.getElementById('scanner-input').value || '').trim();
+  if(!url){ alert('Paste a URL first.'); return; }
+
+  const statusEl = document.getElementById('scan-status');
+  const wrapEl   = document.getElementById('scan-results-wrap');
+
+  // Show spinner, hide previous results
+  wrapEl.style.display = 'none';
+  statusEl.innerHTML =
+    `<div class="notice notice-info" style="display:flex;align-items:center">` +
+    `<span class="scan-spinner"></span>Scanning page via proxy…</div>`;
+
+  // 15-second fetch timeout via AbortController
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+
+  // Try two proxies in sequence for resilience
+  const proxyUrls = [
+    'https://api.allorigins.win/get?url=' + encodeURIComponent(url),
+    'https://corsproxy.io/?' + encodeURIComponent(url),
+  ];
+
+  function tryProxy(idx){
+    if(idx >= proxyUrls.length){
+      // All proxies failed — still surface the URL itself as a PLATFORM entry if recognised
+      const matched = SCAN_PLATFORMS.find(p => p.rx.test(url));
+      if(matched){
+        statusEl.innerHTML =
+          `<div class="notice notice-warn">Proxy scan failed — page could not be fetched. ` +
+          `Showing the URL itself as a known platform entry you can add directly.</div>`;
+        renderScanResults([{type:'PLATFORM', url, dot: matched.dot}], 1);
+      } else {
+        statusEl.innerHTML =
+          `<div class="notice notice-warn">` +
+          `Could not scan this page. Try pasting the URL into the Profiles tab and using List mode to preview via yt-dlp instead.</div>`;
+        wrapEl.style.display = 'none';
+      }
+      return;
+    }
+
+    const proxyUrl = proxyUrls[idx];
+    const isAllOrigins = proxyUrl.includes('allorigins');
+
+    fetch(proxyUrl, { signal: controller.signal })
+      .then(r => {
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return isAllOrigins ? r.json() : r.text();
+      })
+      .then(payload => {
+        // allorigins wraps in {contents:...}; corsproxy returns raw text
+        const html = isAllOrigins
+          ? (payload && typeof payload.contents === 'string' ? payload.contents : null)
+          : (typeof payload === 'string' ? payload : null);
+        if(!html) throw new Error('Empty response');
+
+        const doc   = new DOMParser().parseFromString(html, 'text/html');
+        const all   = extractMediaItems(doc, html, url);
+        const total = all.length;
+        statusEl.innerHTML = '';
+        renderScanResults(all.slice(0, 30), total);
+      })
+      .catch(err => {
+        if(err.name === 'AbortError'){
+          // Timeout — don't try next proxy, just bail
+          statusEl.innerHTML =
+            `<div class="notice notice-warn">Scan timed out. The page may block proxy access. Try yt-dlp directly.</div>`;
+          wrapEl.style.display = 'none';
+          return;
+        }
+        // Proxy failed — try next
+        tryProxy(idx + 1);
+      });
+  }
+
+  tryProxy(0);
+
+  // Clear timeout when done (catch inside handles abort)
+  setTimeout(() => clearTimeout(timer), 20000);
+}
+
+function extractMediaItems(doc, rawHtml, baseUrl){
+  const items = [];
+  const seen  = new Set();
+
+  function push(type, rawUrl){
+    if(!rawUrl || typeof rawUrl !== 'string') return;
+    rawUrl = rawUrl.trim();
+    // Strip JS/template noise
+    if(rawUrl.startsWith('{{') || rawUrl.startsWith('<%') || rawUrl.length > 2000) return;
+    let resolved;
+    try { resolved = new URL(rawUrl, baseUrl).href; } catch(e){ return; }
+    if(!resolved || seen.has(resolved)) return;
+    seen.add(resolved);
+    // Promote to PLATFORM type if URL matches a known yt-dlp platform
+    const platMatch = SCAN_PLATFORMS.find(p => p.rx.test(resolved));
+    if(platMatch) type = 'PLATFORM';
+    items.push({type, url: resolved, dot: platMatch ? platMatch.dot : scanDot(resolved)});
+  }
+
+  // ── 1. Semantic HTML5 elements ────────────────────────────
+  doc.querySelectorAll('video[src]').forEach(el => push('VIDEO', el.getAttribute('src')));
+  doc.querySelectorAll('audio[src]').forEach(el => push('AUDIO', el.getAttribute('src')));
+  doc.querySelectorAll('video source[src], audio source[src]').forEach(el => push('VIDEO', el.getAttribute('src')));
+
+  // ── 2. data-src / data-video / data-url lazy-load attributes ─
+  doc.querySelectorAll('[data-src],[data-video],[data-url],[data-media],[data-mp4],[data-stream]').forEach(el => {
+    ['data-src','data-video','data-url','data-media','data-mp4','data-stream'].forEach(attr => {
+      const v = el.getAttribute(attr);
+      if(v && SCAN_MEDIA_EXTS.test(v)) push('VIDEO', v);
+    });
+  });
+
+  // ── 3. <a href> with media extension ─────────────────────
+  doc.querySelectorAll('a[href]').forEach(el => {
+    const href = el.getAttribute('href');
+    if(href && SCAN_MEDIA_EXTS.test(href)) push('FILE', href);
+  });
+
+  // ── 4. OpenGraph / Twitter Card meta ─────────────────────
+  doc.querySelectorAll('meta[property="og:video"],meta[property="og:video:url"],meta[name="twitter:player:stream"]').forEach(el => {
+    const c = el.getAttribute('content'); if(!c) return;
+    push('VIDEO', c);
+  });
+  doc.querySelectorAll('meta[property="og:audio"]').forEach(el => {
+    const c = el.getAttribute('content'); if(!c) return;
+    push('AUDIO', c);
+  });
+  // og:url — only if it matches a known platform (canonical page URL)
+  doc.querySelectorAll('meta[property="og:url"],meta[property="og:video:secure_url"]').forEach(el => {
+    const c = el.getAttribute('content');
+    if(c && SCAN_PLATFORMS.some(p => p.rx.test(c))) push('PLATFORM', c);
+  });
+
+  // ── 5. JSON-LD structured data ────────────────────────────
+  doc.querySelectorAll('script[type="application/ld+json"]').forEach(el => {
+    try {
+      const obj = JSON.parse(el.textContent || '');
+      const walk = o => {
+        if(!o || typeof o !== 'object') return;
+        ['contentUrl','embedUrl','url','thumbnailUrl'].forEach(k => {
+          if(typeof o[k] === 'string' && (SCAN_MEDIA_EXTS.test(o[k]) || SCAN_PLATFORMS.some(p=>p.rx.test(o[k])))) push('VIDEO', o[k]);
+        });
+        Object.values(o).forEach(v => { if(typeof v === 'object') walk(v); });
+      };
+      walk(obj);
+    } catch(e){}
+  });
+
+  // ── 6. Raw HTML grep — media URLs in script tags and inline JSON ─
+  // This catches players that inject URLs via JS without putting them in HTML attributes.
+  if(rawHtml && typeof rawHtml === 'string'){
+    // Match quoted/unquoted media file URLs
+    const urlRe = /["'`]?(https?:\/\/[^"'`\s<>]{5,500}\.(?:mp4|webm|m4v|mov|avi|mkv|mp3|m4a|ogg|flac|wav)(?:\?[^"'`\s<>]*)?)/gi;
+    let m;
+    while((m = urlRe.exec(rawHtml)) !== null){
+      push('VIDEO', m[1]);
+      if(items.length > 200) break; // safety cap on grepping
+    }
+
+    // Match platform URLs embedded in JS strings (e.g. embed iframes, player configs)
+    const platUrlRe = /["'](https?:\/\/(?:(?:www\.)?youtube\.com\/(?:watch|embed|shorts|v\/)[^"'\s<>]{3,200}|youtu\.be\/[^"'\s<>]{5,50}|(?:www\.)?instagram\.com\/(?:p|reel|tv)\/[^"'\s<>]{3,100}|(?:www\.)?facebook\.com\/(?:watch|video)[^"'\s<>]{3,200}|(?:www\.)?twitter\.com\/[^"'\s<>]{3,150}\/video\/[^"'\s<>]{1,50}|(?:www\.)?tiktok\.com\/@[^"'\s<>]{3,100}|vimeo\.com\/[0-9]{4,12}))['"]/gi;
+    while((m = platUrlRe.exec(rawHtml)) !== null){
+      push('PLATFORM', m[1]);
+      if(items.length > 200) break;
+    }
+
+    // iframe src pointing to known embed patterns
+    const iframeRe = /<iframe[^>]+src=["']([^"']+)["']/gi;
+    while((m = iframeRe.exec(rawHtml)) !== null){
+      const src = m[1];
+      if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player/i.test(src)){
+        push('PLATFORM', src);
+      }
+    }
+  }
+
+  // ── 7. <iframe src> in parsed DOM (embed players) ─────────
+  doc.querySelectorAll('iframe[src]').forEach(el => {
+    const src = el.getAttribute('src');
+    if(!src) return;
+    if(SCAN_PLATFORMS.some(p => p.rx.test(src)) || /embed|player|video/i.test(src)){
+      push('PLATFORM', src);
+    }
+  });
+
+  return items;
+}
+
+function renderScanResults(items, totalFound){
+  scanResults = items;   // store capped set for addScannedItems
+
+  const listEl  = document.getElementById('scan-list');
+  const countEl = document.getElementById('scan-count');
+  const truncEl = document.getElementById('scan-truncation-notice');
+  const wrapEl  = document.getElementById('scan-results-wrap');
+  const actEl   = document.getElementById('scan-action-row');
+
+  countEl.textContent = items.length;
+  wrapEl.style.display = 'block';
+
+  if(!items.length){
+    listEl.innerHTML =
+      `<div class="empty-state"><div class="empty-icon">🔍</div>No media found on this page.</div>`;
+    truncEl.innerHTML = '';
+    actEl.style.display = 'none';
+    return;
+  }
+
+  listEl.innerHTML = items.map((item, i) => {
+    const displayUrl = item.url.length > 60
+      ? item.url.slice(0, 57) + '…'
+      : item.url;
+
+    // Type badge — PLATFORM reuses .plat-* for colour; others use .scan-type-*
+    let typeBadge;
+    if(item.type === 'PLATFORM'){
+      typeBadge = `<span class="plat-badge plat-${item.dot}">PLATFORM</span>`;
+    } else {
+      typeBadge = `<span class="plat-badge scan-type-${item.type.toLowerCase()}">${item.type}</span>`;
+    }
+
+    // Platform badge — shown for non-PLATFORM types when a known platform is detected
+    // (PLATFORM type already shows the platform colour on the type badge itself)
+    // Fix: use SCAN_PLAT_LABEL instead of undefined platLabel
+    const platBadge = (item.type !== 'PLATFORM' && item.dot !== 'gen')
+      ? `<span class="plat-badge plat-${item.dot}">${SCAN_PLAT_LABEL[item.dot] || item.dot}</span>`
+      : '';
+
+    return `<div class="profile-item">
+      <input type="checkbox" class="hist-cb scan-cb" data-idx="${i}" checked />
+      ${typeBadge}
+      ${platBadge}
+      <span class="profile-url" title="${escHtml(item.url)}">${escHtml(displayUrl)}</span>
+    </div>`;
+  }).join('');
+
+  // Truncation notice
+  if(totalFound > 30){
+    truncEl.innerHTML =
+      `<div class="notice notice-info" style="margin-top:.6rem;font-size:11px">` +
+      `Showing first 30 of ${totalFound} items found. ` +
+      `Run a yt-dlp flat-playlist scan for the full list.` +
+      `</div>`;
+  } else {
+    truncEl.innerHTML = '';
+  }
+
+  actEl.style.display = '';
+}
+
+function addScannedItems(addAll){
+  const toAdd = addAll
+    ? scanResults
+    : scanResults.filter((_, i) => {
+        const cb = document.querySelector(`.scan-cb[data-idx="${i}"]`);
+        return cb && cb.checked;
+      });
+
+  if(!toAdd.length){ alert('No items selected.'); return; }
+  toAdd.forEach(item => addToQueue(item.url));
+  // Fix: target Profiles tab by its onclick attribute, not by DOM position
+  switchTab('profiles', document.querySelector('.nav-tab[onclick*="profiles"]'));
+}
+
+/* ─── END MEDIA SCANNER ────────────────────────────────────────────────── */
+
+/* ─── INIT ────────────────────────────────────────────────── */
+loadProfiles();
+loadHistory();
+loadPresets();
+renderPresets();
+renderFlags();
+renderProfiles();
+loadOpts();
+checkLinkedIn();
+
+// Detect or restore device
+const savedDevice = (() => { try{ return localStorage.getItem(DEVICE_KEY); }catch(e){return null;} })();
+const detectedDevice = detectDeviceFromUA();
+setDevice(savedDevice || detectedDevice, null);
+</script>
+</body>
+</html>
