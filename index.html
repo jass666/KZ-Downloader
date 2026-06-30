@@ -638,17 +638,92 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
 .help-sub-panel{display:none}
 .help-sub-panel.active{display:block}
 
+/* ─── TOAST / SNACKBAR ───────────────────────────────────── */
+.toast-stack{
+  position:fixed;bottom:1.25rem;right:1.25rem;
+  display:flex;flex-direction:column;gap:8px;
+  z-index:9999;pointer-events:none;
+}
+.toast{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:8px;
+  font-size:12px;font-weight:600;
+  background:#1e2024;border:1px solid #3a3b42;
+  color:#e4e5e8;
+  box-shadow:0 4px 18px rgba(0,0,0,.45);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .2s,transform .2s;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok  {border-color:rgba(0,200,120,.4);color:#6fffc4}
+.toast.warn{border-color:rgba(255,180,0,.4);color:#ffd966}
+.toast.err {border-color:rgba(220,60,60,.4);color:#e08080}
+:root[data-theme="light"] .toast{background:#fff;border-color:#d4d5da;color:#1a1b1e}
+:root[data-theme="light"] .toast.ok  {border-color:rgba(0,150,90,.4);color:#007a50}
+:root[data-theme="light"] .toast.warn{border-color:rgba(200,140,0,.4);color:#7a5800}
+
+/* ─── IMPROVED SCROLLBAR (term-body) ─────────────────────── */
+.term-body::-webkit-scrollbar{width:5px}
+.term-body::-webkit-scrollbar-track{background:transparent}
+.term-body::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+.term-body::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* ─── INPUT / SELECT FOCUS GLOW ─────────────────────────── */
+select:focus,input[type=text]:focus,.profile-row input:focus{
+  outline:none;
+  border-color:var(--accent-bdr);
+  box-shadow:0 0 0 3px var(--accent-dim);
+}
+
+/* ─── ACTION ROW SEPARATOR ───────────────────────────────── */
+.action-sep{
+  width:1px;height:24px;
+  background:var(--border-str);
+  flex-shrink:0;
+  align-self:center;
+}
+@media(max-width:768px){.action-sep{display:none}}
+
+/* ─── CARD TITLE — slightly stronger ─────────────────────── */
+.card-title{
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.09em;
+  color:var(--text-sec);margin-bottom:.75rem;
+}
+
+/* ─── PROFILE ITEM — hover highlight ─────────────────────── */
+.profile-item{
+  transition:border-color .15s,background .15s;
+}
+.profile-item:hover{
+  border-color:var(--border-str);
+  background:var(--bg2);
+}
+
+/* ─── TERM-BAR COUNT BADGE ───────────────────────────────── */
+.term-count{
+  font-size:10px;color:var(--text-muted);
+  font-family:'Courier New',monospace;
+  margin-left:auto;padding-right:2px;
+  user-select:none;
+}
+
 </style>
 </head>
 <body>
 <div class="app-wrap">
+
+  <!-- TOAST STACK -->
+  <div class="toast-stack" id="toast-stack"></div>
 
   <!-- HEADER -->
   <div class="header">
     <div class="logo">
       <span class="logo-kz">KZ</span>
       <span class="logo-name">Downloader</span>
-      <span class="logo-ver">3.9</span>
+      <span class="logo-ver">4.0</span>
     </div>
     <div class="header-actions">
       <!-- Device Selector -->
@@ -740,6 +815,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
             <div class="term-dot term-dot-g"></div>
           </div>
           <span class="term-label" id="term-tab-label">Command Prompt</span>
+          <span class="term-count" id="term-count"></span>
         </div>
         <div class="term-body" id="term-body">
           <span style="color:#444;font-style:italic">Add profiles above to generate commands.</span>
@@ -751,8 +827,9 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
         <button class="btn btn-ok" id="btn-download" onclick="downloadFile()">⬇ Download file</button>
         <button class="btn btn-warn" id="btn-launch-cmd" onclick="launchBat()">▶ Launch in CMD</button>
         <button class="btn" id="btn-share" onclick="shareCmd()" style="display:none">📤 Share</button>
-        <button class="btn btn-ghost" onclick="clearAll()">🗑 Clear queue</button>
-        <button class="btn btn-ghost" onclick="clearSavedData()" style="opacity:.6" title="Wipe localStorage">⊘ Clear saved</button>
+        <div class="action-sep"></div>
+        <button class="btn btn-ghost" onclick="clearAll()" title="Remove all profiles from queue">🗑 Clear queue</button>
+        <button class="btn btn-ghost" onclick="clearSavedData()" style="opacity:.6" title="Wipe all saved localStorage data">⊘ Clear saved</button>
       </div>
 
       <!-- Per-device output notices -->
@@ -760,13 +837,13 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
         <strong>▶ Launch in CMD</strong> downloads a <code style="background:rgba(255,255,255,.1);padding:1px 5px;border-radius:3px;font-size:11px">.bat</code> launcher — double-click it to open a CMD window with the command ready to run.
       </div>
       <div id="output-notice-mac" class="notice notice-info" style="margin-top:.75rem;display:none">
-        <strong>Terminal command</strong> is ready to paste in <strong>Terminal.app</strong> or iTerm2. Make sure yt-dlp is installed via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">brew install yt-dlp</code> first. See Setup Guide for details.
+        <strong>Terminal command</strong> is ready to paste in <strong>Terminal.app</strong> or iTerm2. Make sure yt-dlp is installed via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">brew install yt-dlp</code> first. See <strong>Help → Setup Guide</strong> for details.
       </div>
       <div id="output-notice-linux" class="notice notice-info" style="margin-top:.75rem;display:none">
-        <strong>Terminal command</strong> is ready to paste in your terminal emulator. Install yt-dlp via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">python -m pip install yt-dlp</code> or the standalone binary. See Setup Guide.
+        <strong>Terminal command</strong> is ready to paste in your terminal emulator. Install yt-dlp via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">python -m pip install yt-dlp</code> or the standalone binary. See <strong>Help → Setup Guide</strong>.
       </div>
       <div id="output-notice-android" class="notice notice-info" style="margin-top:.75rem;display:none">
-        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Setup Guide → Android</strong>.
+        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Help → Setup Guide → Android</strong>.
       </div>
       <div id="output-notice-ios" class="notice notice-warn" style="margin-top:.75rem;display:none">
         <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Options: (1) run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS; (2) use a self-hosted server and trigger downloads remotely. Copy the command and paste it into your SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
@@ -837,7 +914,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
         </div>
         <div>
           <div class="opt-label">Filename template</div>
-          <select id="tmpl-sel" onchange="syncTemplate()">
+          <select id="tmpl-sel" onchange="syncTemplate();saveOpts();regenerate()">
             <option value="%(title)s.%(ext)s">Title.ext</option>
             <option value="%(upload_date)s_%(title)s.%(ext)s">Date_Title.ext</option>
             <option value="%(uploader)s/%(upload_date)s_%(title)s.%(ext)s">Channel/Date_Title.ext</option>
@@ -882,7 +959,7 @@ select:focus,input[type=text]:focus{outline:none;border-color:var(--accent-bdr)}
     </div>
 
     <!-- Add / Edit Modal (inline overlay) -->
-    <div id="preset-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center">
+    <div id="preset-modal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);backdrop-filter:blur(2px);align-items:center;justify-content:center" onclick="if(event.target===this)closePresetModal()">
       <div style="background:var(--surface);border:1px solid var(--border-str);border-radius:12px;padding:1.25rem;width:min(420px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.4)">
         <div style="font-size:13px;font-weight:700;margin-bottom:1rem;color:var(--text)" id="preset-modal-title">Add preset</div>
         <div style="display:flex;flex-direction:column;gap:10px">
@@ -1810,7 +1887,7 @@ const DEVICE_CONFIG = {
     showDownload: true,
     setupOS: 'android',
     bannerClass: 'info',
-    bannerText: '🤖 Android mode — use <strong>📋 Copy</strong> or <strong>📤 Share</strong> to send commands to <strong>Termux</strong>. See Setup Guide → Android for one-time setup.',
+    bannerText: '🤖 Android mode — use <strong>📋 Copy</strong> or <strong>📤 Share</strong> to send commands to <strong>Termux</strong>. See <strong>Help → Setup Guide → Android</strong> for one-time setup.',
     iosWarning: false,
   },
   ios: {
@@ -1824,7 +1901,7 @@ const DEVICE_CONFIG = {
     showDownload: false,
     setupOS: 'ios',
     bannerClass: 'warn',
-    bannerText: '📱 iOS mode — yt-dlp cannot run directly on iPhone/iPad. <strong>Copy</strong> or <strong>Share</strong> the command and paste it into an SSH client (e.g. Termius) connected to a Mac/Linux machine. See Setup Guide → iOS.',
+    bannerText: '📱 iOS mode — yt-dlp cannot run directly on iPhone/iPad. <strong>Copy</strong> or <strong>Share</strong> the command and paste it into an SSH client (e.g. Termius) connected to a Mac/Linux machine. See <strong>Help → Setup Guide → iOS</strong>.',
     iosWarning: true,
   },
 };
@@ -2043,6 +2120,7 @@ function renderPresets(){
 
 function addPreset(i){
   addToQueue(allPresets()[i].url);
+  showToast('✓ Added to queue');
   // Switch back to profiles so user sees it land in queue
   const profilesTab = document.querySelector('.nav-tab');
   switchTab('profiles', profilesTab);
@@ -2159,6 +2237,7 @@ const platLabel = {yt:'YouTube',ig:'Instagram',fb:'Facebook',li:'LinkedIn',tw:'T
 function addToQueue(u){
   u = u.trim();
   if(!u) return;
+  if(!/^https?:\/\//i.test(u)){ alert('Please enter a valid URL starting with http:// or https://'); return; }
   if(profiles.includes(u)){ alert('Already in queue.'); return; }
   profiles.push(u);
   renderProfiles(); checkLinkedIn(); saveProfiles();
@@ -2300,12 +2379,38 @@ function regenerate(){
     }
   }
   el.textContent = text;
-  // Log to history
+  // Update line/URL count in terminal bar
+  const countEl = document.getElementById('term-count');
+  if(countEl){
+    if(profiles.length){
+      countEl.textContent = profiles.length === 1 ? '1 URL' : `${profiles.length} URLs`;
+    } else {
+      countEl.textContent = '';
+    }
+  }
+  if(document.getElementById('panel-history').classList.contains('active')) renderHistory();
+}
+
+/* ─── LOG CURRENT PROFILES TO HISTORY (explicit actions only) ── */
+function logCurrentToHistory(){
   profiles.forEach(u => {
     logToHistory({type:'command', url:u, cmd:buildCmd(u), ts:Date.now()});
     logToHistory({type:'link', url:u, ts:Date.now()});
   });
-  if(document.getElementById('panel-history').classList.contains('active')) renderHistory();
+}
+
+/* ─── TOAST ───────────────────────────────────────────────── */
+function showToast(msg, type='ok', duration=2200){
+  const stack = document.getElementById('toast-stack');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  stack.appendChild(t);
+  requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ t.classList.add('show'); }); });
+  setTimeout(()=>{
+    t.classList.remove('show');
+    setTimeout(()=>t.remove(), 250);
+  }, duration);
 }
 
 /* ─── SAFE CLIPBOARD ──────────────────────────────────────── */
@@ -2330,24 +2435,19 @@ function execCmdCopy(text, onSuccess){
 function copyCmd(){
   const text = document.getElementById('term-body').textContent;
   if(!text||text.includes('Add profiles')) return;
-  safeCopy(text, ()=>{
-    const btn = document.getElementById('copy-btn');
-    btn.textContent='✓ Copied';
-    setTimeout(()=>{ btn.textContent='📋 Copy'; }, 2000);
-  });
+  logCurrentToHistory();
+  safeCopy(text, ()=>{ showToast('✓ Copied to clipboard'); });
 }
 
 /* ─── SHARE CMD (Web Share API) ──────────────────────────── */
 function shareCmd(){
   const text = document.getElementById('term-body').textContent;
   if(!text||text.includes('Add profiles')) return;
+  logCurrentToHistory();
   if(navigator.share){
     navigator.share({title:'KZ Downloader Command', text}).catch(()=>{});
   } else {
-    safeCopy(text, ()=>{
-      const btn = document.getElementById('btn-share');
-      if(btn){ const old=btn.textContent; btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent=old,2000); }
-    });
+    safeCopy(text, ()=>{ showToast('✓ Copied to clipboard'); });
   }
 }
 
@@ -2356,11 +2456,13 @@ function downloadFile(){
   regenerate();
   const text = document.getElementById('term-body').textContent;
   if(!text||text.includes('Add profiles')) return;
+  logCurrentToHistory();
   const names = {terminal:'kz-commands.txt', batch:'kz-download.bat', args:'kz-args.txt'};
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([text],{type:'text/plain'}));
   a.download = names[outTab];
   a.click();
+  showToast('⬇ ' + names[outTab] + ' downloaded');
 }
 
 /* ─── LAUNCH IN CMD ───────────────────────────────────────── */
@@ -2368,6 +2470,7 @@ function launchBat(){
   regenerate();
   const text = document.getElementById('term-body').textContent;
   if(!text||text.includes('Add profiles')){ alert('Add profiles first.'); return; }
+  logCurrentToHistory();
   const cmds = profiles.map(u=>buildCmd(u)).join('\n');
   const bat = [
     '@echo off','setlocal','',
@@ -2382,24 +2485,26 @@ function launchBat(){
 
 /* ─── CLEAR ───────────────────────────────────────────────── */
 function clearAll(){
-  if(!confirm('Clear all profiles?')) return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
-  profiles=[]; renderProfiles(); checkLinkedIn(); regenerate();
+  if(!confirm('Clear all profiles from the queue?')) return;
+  profiles=[]; renderProfiles(); checkLinkedIn(); saveProfiles();
 }
 
 /* ─── CODE COPY (setup tab) ───────────────────────────────── */
 function copyCode(btn){
   const block = btn.parentElement;
   const text = block.textContent.replace('Copy','').trim();
-  safeCopy(text, ()=>{ btn.textContent='✓'; setTimeout(()=>btn.textContent='Copy',1500); });
+  safeCopy(text, ()=>{
+    showToast('✓ Copied');
+    btn.textContent='✓'; setTimeout(()=>btn.textContent='Copy',1500);
+  });
 }
 
 /* ─── LIVE REGEN ON OPTION CHANGE ────────────────────────── */
 ['format-sel','outdir','tmpl-custom','date-filter'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', saveOpts);
+  document.getElementById(id).addEventListener('input', ()=>{ saveOpts(); regenerate(); });
 });
-document.getElementById('format-sel').addEventListener('change', saveOpts);
-document.querySelectorAll('[name=dlmode]').forEach(r=>r.addEventListener('change',updateMode));
+document.getElementById('format-sel').addEventListener('change', ()=>{ saveOpts(); regenerate(); });
+document.querySelectorAll('[name=dlmode]').forEach(r=>r.addEventListener('change', ()=>{ updateMode(); regenerate(); }));
 
 /* ─── HISTORY SYSTEM ──────────────────────────────────────── */
 const HIST_KEY = 'kz-history';
@@ -3024,6 +3129,14 @@ checkLinkedIn();
 const savedDevice = (() => { try{ return localStorage.getItem(DEVICE_KEY); }catch(e){return null;} })();
 const detectedDevice = detectDeviceFromUA();
 setDevice(savedDevice || detectedDevice, null);
+
+// Escape closes the preset modal
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    const modal = document.getElementById('preset-modal');
+    if(modal && modal.style.display === 'flex') closePresetModal();
+  }
+});
 </script>
 </body>
 </html>

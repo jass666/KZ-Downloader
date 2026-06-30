@@ -4,7 +4,103 @@ All notable changes to **KZ Downloader** are documented here.
 
 Project created and maintained by **Jaswant Kanojia**.
 
-**Date:** 29-06-2026
+**Date:** 30-06-2026
+
+---
+
+## v4.0 — Fix + UI/UX: History Spam, URL Validation, clearAll, Stale Notices, Settings Regen, Preset Modal Escape; Toast System, Terminal Badge, Input Glow, Action Row, Scrollbar
+**Date:** 30-06-2026
+
+### Fixed
+
+**1. History logged on every keystroke (spam)** — `logToHistory()` was called inside `regenerate()`, which fires on every profile render and every option change. Typing a single character in the output folder field would write dozens of duplicate history entries per second, overwhelming the 500-entry cap and making history meaningless. Logging has been moved out of `regenerate()` entirely into a dedicated `logCurrentToHistory()` helper that is called only on explicit user actions: **Copy**, **Share**, **Download file**, and **Launch in CMD**. History now records what the user actually did, not passive state changes.
+
+**2. No URL validation before addToQueue()** — `addToQueue()` accepted any string, including plain text like `asdfg` or partial paths, silently adding them to the queue and generating malformed yt-dlp commands. A guard now rejects any input that does not start with `http://` or `https://` and shows a clear alert before touching the queue.
+
+**3. clearAll() wiped localStorage instead of saving the empty queue** — `clearAll()` called `localStorage.removeItem(STORAGE_KEY)` directly, meaning the key was deleted rather than updated. This diverged from how the rest of the app handles persistence and could cause stale data to reappear on edge cases. The function now calls `saveProfiles()` (which serialises the empty array into storage) to stay consistent. The confirm dialog text was also corrected from the ambiguous *"Clear all profiles?"* to *"Clear all profiles from the queue?"* to distinguish it from **⊘ Clear saved**.
+
+**4. Stale "Setup Guide" references in notices and banners** — five places in the HTML referenced the old tab name "Setup Guide" after it was renamed to "Help" in v3.7. All have been updated to **"Help → Setup Guide"** (or **"Help → Setup Guide → Android / iOS"** where the OS sub-tab was also named):
+
+| Location | Before | After |
+|---|---|---|
+| Mac output notice | `See Setup Guide for details` | `See Help → Setup Guide for details` |
+| Linux output notice | `See Setup Guide` | `See Help → Setup Guide` |
+| Android output notice | `see Setup Guide → Android` | `see Help → Setup Guide → Android` |
+| Android device banner | `See Setup Guide → Android for one-time setup` | `See Help → Setup Guide → Android for one-time setup` |
+| iOS device banner | `See Setup Guide → iOS` | `See Help → Setup Guide → iOS` |
+
+**5. Settings changes did not update the generated command** — `format-sel`, `outdir`, `tmpl-custom`, and `date-filter` inputs called `saveOpts()` on change but not `regenerate()`. The download mode radio buttons called `updateMode()` but not `regenerate()`. The command block therefore showed a stale command whenever the user adjusted settings without switching tabs. All five listeners now chain `regenerate()` after saving, so the terminal block always reflects current options in real time.
+
+**6. Preset modal had no keyboard dismiss** — the modal could only be closed via the Cancel button. An `Escape` keydown listener is now registered globally at init; if the preset modal is open, `Escape` calls `closePresetModal()`.
+
+### Changed
+
+**`regenerate()`** — history logging removed. Function is now purely responsible for building and rendering the command text.
+
+**`logCurrentToHistory()`** — new helper function. Iterates `profiles` and writes one `command` entry and one `link` entry per URL to history. Called only from `copyCmd()`, `shareCmd()`, `downloadFile()`, and `launchBat()`.
+
+**`addToQueue()`** — URL format guard added before duplicate check.
+
+**`clearAll()`** — confirm text updated; `localStorage.removeItem()` replaced with `saveProfiles()`.
+
+**Settings event listeners** — `regenerate()` chained onto `input`/`change` handlers for `format-sel`, `outdir`, `tmpl-custom`, `date-filter`, and `[name=dlmode]` radio buttons.
+
+### Added (UI/UX)
+
+**Toast / snackbar system** — a `showToast(msg, type, duration)` function and `.toast-stack` DOM container replace all in-place button-text mutations. Toasts appear in the bottom-right corner, stack vertically, animate in and out with opacity and a small Y-translate, and respect both dark and light themes. Three visual variants: `ok` (teal/green), `warn` (amber), `err` (red). Toasts are used for:
+
+| Action | Toast message |
+|---|---|
+| Copy command | `✓ Copied to clipboard` |
+| Share (fallback copy) | `✓ Copied to clipboard` |
+| Download file | `⬇ kz-commands.txt downloaded` (filename varies by tab) |
+| Add preset to queue | `✓ Added to queue` |
+| Copy code block (Setup Guide) | `✓ Copied` |
+
+**Terminal bar URL count badge** — a `#term-count` label is added to the right of the terminal bar. It shows `1 URL` / `N URLs` when profiles are queued and clears when the queue is empty. Updated live by `regenerate()`. Rendered in `.term-count` (monospace, muted colour, `user-select:none`).
+
+**Input / select focus glow** — all `input[type=text]` and `select` elements now emit a `box-shadow: 0 0 0 3px var(--accent-dim)` ring on focus in addition to the existing `border-color` highlight. Consistent with the brand accent colour in both dark and light themes.
+
+**Action row separator** — a `.action-sep` thin vertical rule (`1px` wide, `24px` tall) is inserted between the primary action buttons (Copy, Download file, Launch in CMD, Share) and the destructive ones (Clear queue, Clear saved). Hidden automatically on mobile via `@media(max-width:768px)` where buttons stack vertically.
+
+**Profile item hover highlight** — `.profile-item` gains `transition` and on hover shows `border-color: var(--border-str)` and `background: var(--bg2)`, making the queue easier to scan.
+
+**Terminal body scrollbar styling** — custom thin scrollbar (5px, rounded thumb, transparent track) via `::-webkit-scrollbar` rules on `.term-body`. Replaces the default fat browser scrollbar that occupied significant horizontal space inside the terminal block.
+
+**Preset modal backdrop dismiss** — `onclick="if(event.target===this)closePresetModal()"` added to the modal overlay `div`. Clicking anywhere outside the modal card now closes it, consistent with standard modal UX. Works alongside the existing Cancel button and Escape key listener.
+
+**Filename template dropdown now triggers regenerate** — `tmpl-sel` (`onchange`) previously only called `syncTemplate()`. It now also calls `saveOpts()` and `regenerate()`, so switching presets (e.g. from `Title.ext` to `Channel/Date_Title.ext`) immediately updates the command block.
+
+### Changed
+
+**`regenerate()`** — history logging removed; URL count badge update added.
+
+**`logCurrentToHistory()`** — new helper function. Iterates `profiles` and writes one `command` entry and one `link` entry per URL to history. Called only from `copyCmd()`, `shareCmd()`, `downloadFile()`, and `launchBat()`.
+
+**`addToQueue()`** — URL format guard added before duplicate check.
+
+**`clearAll()`** — confirm text updated; `localStorage.removeItem()` replaced with `saveProfiles()`.
+
+**`copyCmd()`** — button text mutation removed; `showToast('✓ Copied to clipboard')` used instead.
+
+**`shareCmd()`** — button text mutation removed; `showToast('✓ Copied to clipboard')` used on fallback copy.
+
+**`downloadFile()`** — `showToast()` added after download is triggered.
+
+**`addPreset()`** — `showToast('✓ Added to queue')` added.
+
+**`copyCode()`** — `showToast('✓ Copied')` added alongside the existing button label flash.
+
+**`tmpl-sel` onchange** — extended from `syncTemplate()` to `syncTemplate(); saveOpts(); regenerate()`.
+
+**Settings event listeners** — `regenerate()` chained onto `input`/`change` handlers for `format-sel`, `outdir`, `tmpl-custom`, `date-filter`, and `[name=dlmode]` radio buttons.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | `logToHistory()` removed from `regenerate()`; `logCurrentToHistory()` added and wired to Copy / Share / Download / Launch; URL validation guard in `addToQueue()`; `clearAll()` dialog text and storage call corrected; Mac / Linux / Android / iOS notice and banner text updated to reference Help tab; settings listeners extended with `regenerate()`; Escape key listener added for preset modal; `showToast()` function and `.toast-stack` container added; `.toast` / `.toast.ok` / `.toast.warn` / `.toast.err` CSS added; `.term-count` badge added to terminal bar and wired in `regenerate()`; input focus glow (`box-shadow`) added to `select` and `input[type=text]`; `.action-sep` CSS and element added to action row; `.profile-item` hover transition added; `.term-body` custom scrollbar CSS added; preset modal backdrop `onclick` dismiss added; `tmpl-sel` onchange extended; logo version updated to `4.0` |
+| `CHANGELOG.md` | This entry |
 
 ---
 
