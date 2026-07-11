@@ -1,10 +1,10 @@
 # ============================================================
 #  KZ Downloader — Deploy (Local Wins)
 #  WARNING: Overwrites remote with local state.
-#  Place this file in the repo root: D:\Projects\KZ Downloader
+#  Place this file in the repo root.
 # ============================================================
 
-$REPO_PATH   = 'D:\Projects\KZ Downloader'
+$REPO_PATH   = $PSScriptRoot
 $BRANCH      = 'main'
 $REMOTE_URL  = 'https://github.com/jass666/KZ-Downloader'
 

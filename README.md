@@ -1,4 +1,4 @@
-# KZ Downloader
+# KZ Downloader - README
 
 A browser-based GUI for generating [yt-dlp](https://github.com/yt-dlp/yt-dlp) commands — built for downloading videos from any social media profile, channel, or page without touching the command line directly.
 
@@ -10,7 +10,7 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
-## What It Does
+## What it is
 
 Open the app at [kzdownloader.pages.dev](https://kzdownloader.pages.dev/). Paste social profile URLs, configure options, and the app generates ready-to-run yt-dlp commands.
 
@@ -279,6 +279,19 @@ All data stays in your browser's `localStorage`, scoped to the file path (or ori
 | `kz_pw_persist_v1` | Playwright scanner: output folder, KZ folder path, scroll count, platform selection |
 
 To back up history, use **Export selected** in the History tab. To wipe everything, use **⊘ Clear saved** in the Settings tab or **Clear all history** in the History tab.
+
+---
+
+## Deployment
+
+The browser app itself is static, but the scanner helpers use Python locally.
+
+1. Edit `index.html`, `kz_scanner.py`, or helper scripts as needed.
+2. Open the app locally or on the hosted Pages URL and test the affected tab.
+3. Run `KZ_Deploy_Launcher.bat` or `KZ_Deploy.ps1` when the local folder should become the GitHub branch state.
+4. Cloudflare Pages serves the static app; local scanner files remain user-run tools.
+
+`KZ_Deploy.ps1` is a local-wins deploy helper. Use it only when local files are the intended source of truth.
 
 ---
 

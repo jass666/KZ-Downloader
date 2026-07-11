@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 title KZ Scanner - Guided Launch
+set "ROOT=%~dp0"
 
 :BANNER
 cls
@@ -14,13 +15,13 @@ echo.
 set "ADVANCED_FLOW=0"
 set "CDP_HTTP=http://127.0.0.1:9222"
 set "CDP_FLAG="
-set "PROFILE_DIR=D:\Projects\KZ Downloader\kz_browser_profile"
+set "PROFILE_DIR=!ROOT!kz_browser_profile"
 set "CDP_LABEL=Saved-login scanner window"
 set "SCROLLS=10"
 set "DELAY=2.5"
 set "PLATFORM_FLAG="
 set "SERVE_FLAG="
-set "JSON_DIR=D:\Projects\KZ Downloader\JSONs"
+set "JSON_DIR=!ROOT!JSONs"
 set "OUT_NAME=kz_scan_results.json"
 if not exist "!JSON_DIR!" mkdir "!JSON_DIR!"
 set "OUT_FILE=!JSON_DIR!\!OUT_NAME!"
@@ -62,15 +63,15 @@ set /p "MODE_CHOICE=  Choice (1-2/S/A): "
 
 set "CDP_HTTP=http://127.0.0.1:9222"
 set "CDP_FLAG="
-set "PROFILE_DIR=D:\Projects\KZ Downloader\kz_browser_profile"
+set "PROFILE_DIR=!ROOT!kz_browser_profile"
 set "CDP_LABEL=Saved-login scanner window"
 
-if "!MODE_CHOICE!"=="1" ( set "PROFILE_DIR=D:\Projects\KZ Downloader\kz_browser_profile" & set "CDP_LABEL=Saved-login scanner window" & goto MODE_DONE )
-if "!MODE_CHOICE!"=="2" ( set "PROFILE_DIR=D:\Projects\KZ Downloader\kz_clean_profile" & set "CDP_LABEL=Clean scanner window" & goto MODE_DONE )
+if "!MODE_CHOICE!"=="1" ( set "PROFILE_DIR=!ROOT!kz_browser_profile" & set "CDP_LABEL=Saved-login scanner window" & goto MODE_DONE )
+if "!MODE_CHOICE!"=="2" ( set "PROFILE_DIR=!ROOT!kz_clean_profile" & set "CDP_LABEL=Clean scanner window" & goto MODE_DONE )
 if /i "!MODE_CHOICE!"=="S" goto MODE_DONE
 if /i "!MODE_CHOICE!"=="A" goto ASK_URL
 echo  [!] Invalid choice. Defaulting to saved-login scanner window.
-set "PROFILE_DIR=D:\Projects\KZ Downloader\kz_browser_profile"
+set "PROFILE_DIR=!ROOT!kz_browser_profile"
 set "CDP_LABEL=Saved-login scanner window"
 
 :MODE_DONE
@@ -212,7 +213,7 @@ echo.
 
 :: --- STEP 7 : OUTPUT FILE ------------------------------------
 :ASK_OUT
-set "JSON_DIR=D:\Projects\KZ Downloader\JSONs"
+set "JSON_DIR=!ROOT!JSONs"
 
 echo  [7/7]  Output file name
 echo         Saved to: !JSON_DIR!\
@@ -338,7 +339,7 @@ if "!CHROME_EXE!"=="" (
 echo   Chrome found: !CHROME_EXE!
 echo.
 
-set "CDP_PROFILE=D:\Projects\KZ Downloader\chrome_cdp_profile"
+set "CDP_PROFILE=!ROOT!chrome_cdp_profile"
 if not exist "!CDP_PROFILE!" mkdir "!CDP_PROFILE!"
 
 echo   Launching Chrome with --remote-debugging-port=9222...

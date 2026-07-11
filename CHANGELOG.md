@@ -1,4 +1,4 @@
-# Changelog
+# Changelog - KZ Downloader
 
 All notable changes to **KZ Downloader** are documented here.
 
