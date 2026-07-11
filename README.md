@@ -1,4 +1,4 @@
-# KZ Downloader - README
+# KZ Downloader
 
 A browser-based GUI for generating [yt-dlp](https://github.com/yt-dlp/yt-dlp) commands — built for downloading videos from any social media profile, channel, or page without touching the command line directly.
 

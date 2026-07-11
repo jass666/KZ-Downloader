@@ -4,9 +4,19 @@
 #  Place this file in the repo root.
 # ============================================================
 
+param(
+    [switch]$AutoYes
+)
+
 $REPO_PATH   = $PSScriptRoot
 $BRANCH      = 'main'
 $REMOTE_URL  = 'https://github.com/jass666/KZ-Downloader'
+
+function Wait-ForExit {
+    if (-not $AutoYes) {
+        Read-Host " Press Enter to exit" | Out-Null
+    }
+}
 
 Write-Host ""
 Write-Host " ====================================================="
@@ -17,14 +27,18 @@ Write-Host " [INFO]  Repo  : $REPO_PATH"
 Write-Host " [INFO]  Remote: $REMOTE_URL"
 Write-Host " [INFO]  Branch: $BRANCH"
 Write-Host ""
-Write-Host " Press ENTER to start deployment, or type anything and press ENTER to abort."
-$confirm = Read-Host " >"
-if ($confirm -ne "") {
-    Write-Host ""
-    Write-Host " [INFO]  Aborted. Nothing was changed."
-    Write-Host ""
-    Read-Host " Press Enter to exit"
-    exit 0
+if ($AutoYes) {
+    Write-Host " [INFO]  AutoYes enabled. Starting without prompts."
+} else {
+    Write-Host " Press ENTER to start deployment, or type anything and press ENTER to abort."
+    $confirm = Read-Host " >"
+    if ($confirm -ne "") {
+        Write-Host ""
+        Write-Host " [INFO]  Aborted. Nothing was changed."
+        Write-Host ""
+        Wait-ForExit
+        exit 0
+    }
 }
 Write-Host ""
 
@@ -33,7 +47,7 @@ Write-Host " [STEP 1/5]  Verifying repo path..."
 if (-not (Test-Path $REPO_PATH)) {
     Write-Host " [ERROR] Repo path not found: $REPO_PATH"
     Write-Host "         Expected: $REPO_PATH"
-    Read-Host " Press Enter to exit"
+    Wait-ForExit
     exit 1
 }
 Set-Location $REPO_PATH
@@ -46,7 +60,7 @@ git rev-parse --is-inside-work-tree 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Write-Host " [ERROR] Not a Git repository."
     Write-Host "         Run: git init && git remote add origin $REMOTE_URL"
-    Read-Host " Press Enter to exit"
+    Wait-ForExit
     exit 1
 }
 Write-Host " [OK]    Git repo confirmed."
@@ -77,7 +91,7 @@ if ($fileCount -gt 0) {
     git add -A
     if ($LASTEXITCODE -ne 0) {
         Write-Host " [ERROR] git add failed."
-        Read-Host " Press Enter to exit"
+        Wait-ForExit
         exit 1
     }
 } else {
@@ -89,7 +103,7 @@ Set-Content -Path ".deploy_stamp" -Value $timestamp -Encoding UTF8
 git add .deploy_stamp
 if ($LASTEXITCODE -ne 0) {
     Write-Host " [ERROR] Could not stage .deploy_stamp"
-    Read-Host " Press Enter to exit"
+    Wait-ForExit
     exit 1
 }
 
@@ -100,7 +114,7 @@ Write-Host " [GIT]   Committing: $commitMsg"
 git commit -m $commitMsg
 if ($LASTEXITCODE -ne 0) {
     Write-Host " [ERROR] Commit failed."
-    Read-Host " Press Enter to exit"
+    Wait-ForExit
     exit 1
 }
 
@@ -120,7 +134,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "         - Branch is protected on remote"
     Write-Host ""
     Write-Host "         Remote: $REMOTE_URL"
-    Read-Host " Press Enter to exit"
+    Wait-ForExit
     exit 1
 }
 
@@ -135,4 +149,4 @@ Write-Host "  Branch  : $BRANCH"
 Write-Host "  Repo    : $REMOTE_URL"
 Write-Host " ====================================================="
 Write-Host ""
-Read-Host " Press Enter to exit"
+Wait-ForExit
