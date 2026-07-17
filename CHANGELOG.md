@@ -4,7 +4,36 @@ All notable changes to **KZ Downloader** are documented here.
 
 Project created and maintained by **Jaswant Kanojia**.
 
-**Date:** 30-06-2026
+**Date:** 17-07-2026
+
+---
+
+## v4.1 — Feature: Import URL List From Text File
+**Date:** 17-07-2026
+
+### Added
+
+**"📄 Import from text file" button in the Profiles tab** — sits directly under the manual add-profile row. Opens a file picker (`accept=".txt,.csv"`) and hands the selected file to a new `importUrlListFile(event)` handler.
+
+**`importUrlListFile()`** — reads the file as plain text and parses it line by line:
+- `#`-prefixed lines are treated as comments / section headers and ignored.
+- Plain URL-per-line files are supported directly.
+- Pipe-delimited lists in the form `filename | url | page | status` are also supported (e.g. an `image-sources.txt` export), splitting on `|` and reading the second field as the URL.
+- Lines whose URL field is a placeholder (`TBD`, `N/A`, `(not found)`, `(not yet verified)`, dashes, or anything not starting with `http://`/`https://`) are **not** queued — they're collected and reported instead, so nothing malformed reaches the yt-dlp command builder.
+- Valid, non-duplicate URLs are pushed into the existing `profiles` array and go through the normal `renderProfiles()` / `checkLinkedIn()` / `saveProfiles()` pipeline, so they behave exactly like manually-added URLs (persisted to `localStorage`, included in the generated terminal/batch/args output).
+
+**Import summary** — on completion, an `alert()` reports how many URLs were queued, how many duplicates were skipped, and lists (up to 15, with a "…and N more" overflow note) which lines were skipped for having no usable URL, including the filename and status text from the source file where available. A `showToast('✓ Imported N URL(s)')` confirms success in the corner as well, consistent with the app's existing toast conventions.
+
+### Notes
+
+This reuses the existing single-URL `profiles` queue — it does not introduce per-item target filenames or a separate download path. It's meant for pulling a batch of confirmed URLs (e.g. from a sourcing/audit text file) straight into the queue instead of pasting them one at a time. For workflows where each URL needs to be saved under a *specific* target filename (like the Swift Trucks image-sources format), use the companion `download_images.py` script instead, which reads the same pipe-delimited format and writes files out under their intended names.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | Import button + hidden file input added to Profiles tab; `importUrlListFile()` and `LIST_IMPORT_PLACEHOLDER_RE` added; logo version bumped to `4.1` |
+| `CHANGELOG.md` | This entry |
 
 ---
 

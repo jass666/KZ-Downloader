@@ -723,7 +723,7 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
     <div class="logo">
       <span class="logo-kz">KZ</span>
       <span class="logo-name">Downloader</span>
-      <span class="logo-ver">4.0</span>
+      <span class="logo-ver">4.1</span>
     </div>
     <div class="header-actions">
       <!-- Device Selector -->
@@ -778,6 +778,15 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
       </div>
       <div class="notice notice-info">
         Paste any YouTube channel, Instagram profile, Facebook page, LinkedIn page, or direct video URL. yt-dlp handles all of these natively.
+      </div>
+      <div class="profile-row" style="margin-top:.75rem">
+        <button class="btn btn-accent" style="font-size:11px" onclick="document.getElementById('list-import-file').click()">📄 Import from text file</button>
+        <input type="file" id="list-import-file" accept=".txt,.csv" style="display:none" onchange="importUrlListFile(event)" />
+      </div>
+      <div class="notice notice-warn" style="margin-top:.5rem;font-size:11px">
+        Accepts one URL per line, or pipe-delimited lists like <code style="background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px">filename | url | page | status</code>
+        (e.g. an <code style="background:rgba(0,0,0,.15);padding:1px 5px;border-radius:3px">image-sources.txt</code>). <code>#</code> comment lines and placeholder
+        URLs (<code>TBD</code>, "not found", "not yet verified", etc.) are skipped and reported instead of queued.
       </div>
     </div>
 
@@ -2247,6 +2256,65 @@ function addProfile(){
   const inp = document.getElementById('profile-input');
   addToQueue(inp.value); inp.value='';
 }
+
+/* ─── IMPORT URL LIST FROM TEXT FILE ─────────────────────────
+   Accepts:
+   - plain URL-per-line files
+   - pipe-delimited lists: "filename | url | page | status"  (e.g. an image-sources.txt)
+   "#" lines are treated as comments/section headers and ignored.
+   Placeholder URLs (TBD, "(not found)", "(not yet verified)", empty, etc.) are
+   skipped and reported rather than queued. ───────────────────────────────── */
+const LIST_IMPORT_PLACEHOLDER_RE = /^\(|^tbd$|^n\/a$|^-+$/i;
+function importUrlListFile(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const raw = String(ev.target.result || '');
+    const lines = raw.split(/\r?\n/);
+
+    let queued = 0, duplicates = 0;
+    const skippedPlaceholder = []; // {filename, status}
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if(!trimmed || trimmed.startsWith('#')) return;
+
+      let filename = '', url = '', status = '';
+      if(trimmed.includes('|')){
+        const parts = trimmed.split('|').map(p => p.trim());
+        filename = parts[0] || '';
+        url      = parts[1] || '';
+        status   = parts.slice(3).join(' | ') || parts[2] || '';
+      } else {
+        url = trimmed;
+      }
+
+      if(!url || LIST_IMPORT_PLACEHOLDER_RE.test(url) || !/^https?:\/\//i.test(url)){
+        skippedPlaceholder.push({filename: filename || trimmed, status: status || 'no usable URL'});
+        return;
+      }
+      if(profiles.includes(url)){ duplicates++; return; }
+      profiles.push(url);
+      queued++;
+    });
+
+    if(queued){ renderProfiles(); checkLinkedIn(); saveProfiles(); }
+
+    let msg = `Imported ${queued} URL(s) into the queue.`;
+    if(duplicates) msg += `\n${duplicates} already in queue (skipped).`;
+    if(skippedPlaceholder.length){
+      msg += `\n${skippedPlaceholder.length} line(s) skipped — no usable URL (TBD / not sourced / placeholder):`;
+      const preview = skippedPlaceholder.slice(0, 15).map(s => `  • ${s.filename}${s.status ? ' — ' + s.status : ''}`);
+      msg += '\n' + preview.join('\n');
+      if(skippedPlaceholder.length > 15) msg += `\n  …and ${skippedPlaceholder.length - 15} more.`;
+    }
+    alert(msg);
+    if(queued) showToast(`✓ Imported ${queued} URL(s)`);
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
 function removeProfile(i){
   profiles.splice(i,1); renderProfiles(); checkLinkedIn(); saveProfiles();
 }
