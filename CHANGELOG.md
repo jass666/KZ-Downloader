@@ -8,6 +8,30 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v4.2 — Fix: Batch Script / Launch-in-CMD Silently Corrupting URLs
+**Date:** 17-07-2026
+
+### Fixed
+
+**`%` characters in `.bat` output not escaped for cmd.exe** — commands copied from the Terminal tab and pasted directly into a shell (typically PowerShell, where `%` is not a metacharacter) worked fine, but the same commands written into the downloaded `.bat` file (via the Batch Script tab or **▶ Launch in CMD**) could skip files or throw "bad url" errors.
+
+Root cause: `.bat` files are always executed by `cmd.exe`, regardless of which shell the user normally uses. `cmd.exe` expands any `%...%` pattern as an environment variable reference and silently drops it if no matching variable exists. This corrupted two things on every batch run:
+- yt-dlp's own output template (`%(title)s.%(ext)s`) — the percent signs got eaten by cmd's variable expansion before yt-dlp ever saw them.
+- Percent-encoded characters inside URLs (`%20`, `%3D`, etc. — common in Instagram/Facebook links) — cmd tried to expand these as variables too, truncating or mangling the URL mid-command.
+
+Because the exact same string wasn't a problem when typed/pasted directly (PowerShell doesn't touch `%`), the bug only showed up specifically in `.bat` output, which made it look like the batch generation itself was broken rather than a shell-parsing difference.
+
+**Fix:** `buildCmd(url, forBatch)` now takes a second parameter. When `forBatch` is `true`, every `%` in the fully-built command line is doubled to `%%` — the standard cmd.exe escape for a literal percent sign — before being written into the `.bat` file. The Batch Script tab (`regenerate()`) and **▶ Launch in CMD** (`launchBat()`) now both call `buildCmd(u, true)`. The Terminal tab and command-history logging (`logCurrentToHistory()`) are unaffected and continue to call `buildCmd(u)` with single, un-doubled percent signs, since those are meant for direct copy/paste into an interactive shell.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | `buildCmd()` gained a `forBatch` parameter that doubles `%` for cmd.exe safety; `regenerate()`'s batch branch and `launchBat()` updated to pass `true`; logo version bumped to `4.2` |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v4.1 — Feature: Import URL List From Text File
 **Date:** 17-07-2026
 

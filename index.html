@@ -723,7 +723,7 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
     <div class="logo">
       <span class="logo-kz">KZ</span>
       <span class="logo-name">Downloader</span>
-      <span class="logo-ver">4.1</span>
+      <span class="logo-ver">4.2</span>
     </div>
     <div class="header-actions">
       <!-- Device Selector -->
@@ -2403,18 +2403,28 @@ function getOpts(){
   return {fmt, dir, tmpl, mode, flagArr, saveMode};
 }
 
-function buildCmd(url){
+function buildCmd(url, forBatch){
   const {fmt,dir,tmpl,mode,flagArr,saveMode} = getOpts();
+  let cmd;
   if(mode==='list'){
-    return `python -m yt_dlp --flat-playlist --print "%(title)s | %(url)s" "${url}"`;
-  }
-  if(saveMode === 'ask'){
+    cmd = `python -m yt_dlp --flat-playlist --print "%(title)s | %(url)s" "${url}"`;
+  } else if(saveMode === 'ask'){
     const parts = ['python -m yt_dlp', `-f "${fmt}"`, '--no-mtime', ...flagArr, `"${url}"`];
-    return parts.join(' ');
+    cmd = parts.join(' ');
+  } else {
+    const outpath = dir + '/' + tmpl;
+    const parts = ['python -m yt_dlp', `-f "${fmt}"`, `-o "${outpath}"`, ...flagArr, `"${url}"`];
+    cmd = parts.join(' ');
   }
-  const outpath = dir + '/' + tmpl;
-  const parts = ['python -m yt_dlp', `-f "${fmt}"`, `-o "${outpath}"`, ...flagArr, `"${url}"`];
-  return parts.join(' ');
+  // cmd.exe (which is what .bat files always run under, even if you normally use
+  // PowerShell) expands ANY %...% pattern as a variable reference and silently
+  // drops it if the variable doesn't exist — this eats yt-dlp's %(title)s-style
+  // templates AND percent-encoded characters inside URLs (%20, %3D, etc.), which
+  // is why batch runs can skip files or throw "bad url" errors even though the
+  // exact same command works fine when typed/pasted directly (typically into
+  // PowerShell, where % isn't special). Doubling every % to %% tells cmd.exe to
+  // treat it as a literal percent sign instead of the start of a variable.
+  return forBatch ? cmd.replace(/%/g, '%%') : cmd;
 }
 
 function regenerate(){
@@ -2433,7 +2443,7 @@ function regenerate(){
       '@echo off','setlocal','',
       'rem KZ Downloader — generated batch script',
       folderComment,'',
-      ...profiles.map(u=>buildCmd(u)),'',
+      ...profiles.map(u=>buildCmd(u, true)),'',
       'echo.','echo All done!','pause'
     ].join('\n');
   } else {
@@ -2539,7 +2549,7 @@ function launchBat(){
   const text = document.getElementById('term-body').textContent;
   if(!text||text.includes('Add profiles')){ alert('Add profiles first.'); return; }
   logCurrentToHistory();
-  const cmds = profiles.map(u=>buildCmd(u)).join('\n');
+  const cmds = profiles.map(u=>buildCmd(u, true)).join('\n');
   const bat = [
     '@echo off','setlocal','',
     'rem KZ Downloader — CMD Launcher','',
