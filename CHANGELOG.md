@@ -8,6 +8,36 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v4.4.2 - Improvement: Colab Adds YouTube JS Support, Keeps No-Cookies UX
+**Date:** 22-07-2026
+
+### Changed
+
+**`KZ_Colab_Downloader.ipynb` now installs yt-dlp's current YouTube JavaScript challenge support automatically.** The previous Colab setup installed plain `yt-dlp`, which can now emit warnings like "No supported JavaScript runtime could be found" during YouTube extraction. That warning matters because modern YouTube extraction increasingly depends on external JavaScript challenge handling. The notebook now installs `yt-dlp[default]` instead of bare `yt-dlp`, so the PyPI install includes yt-dlp's companion EJS support package.
+
+**The notebook also installs Deno automatically in Colab.** Deno is placed on `PATH` using `/root/.deno/bin`, then the same cell continues into the normal download flow. This keeps the non-technical UX intact: users still click **Run in Colab**, click the single play button, and the notebook handles setup inside the session without asking them to understand JavaScript runtimes, challenge solvers, npm, cookies, or account state.
+
+**The runner now executes yt-dlp through Python argument lists instead of a shell command string.** The notebook parses the copied KZ command with `shlex.split()`, strips any existing `-o` / `--output` argument structurally, appends the Colab-safe output template, and runs `[sys.executable, "-m", "yt_dlp", ...]`. This avoids shell quoting edge cases around URLs, spaces in `/content/KZ Downloads`, `%(title)s` templates, and copied commands that start with `python -m yt_dlp`.
+
+**Diagnostics are now intentionally explicit.** yt-dlp output is captured and replayed, non-zero exit codes are called out, the most relevant `ERROR` / `Unable` lines are repeated near the bottom, and common causes get a short human-readable hint. This is aimed at maintainer debugging from GitHub screenshots/logs: if Colab fails, the end of the cell should say whether it was a YouTube anonymous-session block, an unavailable format, missing FFmpeg, or no output file.
+
+### Product Decision
+
+**Cookies are deliberately not part of the Colab path.** A cookies-based flow is the most reliable way to get past YouTube's "Sign in to confirm you're not a bot" wall, but this feature is primarily for non-technical users who should not be asked to export, upload, or manage browser cookies. Cookies are sensitive account material, are easy to mishandle, and would turn the "no-install, one-button cloud runner" into an advanced operator workflow.
+
+The practical ceiling is now documented honestly: Colab works for many public URLs, and the notebook does the best no-cookies setup available, but some public YouTube videos may still be blocked by YouTube's treatment of anonymous Colab cloud sessions. In that case, the supported fallback is a local PC/KZ run or the Playwright scanner for authenticated/private browser workflows.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `KZ_Colab_Downloader.ipynb` | Install `yt-dlp[default]`; install Deno and add it to `PATH`; run yt-dlp via `sys.executable -m yt_dlp` with parsed arguments; structurally rewrite output path; capture and summarize yt-dlp output; remove cookies as a suggested Colab remedy |
+| `index.html` | Updated Run in Colab notice so it no longer overpromises public YouTube reliability and clearly says some YouTube videos may be blocked by anonymous Colab sessions |
+| `README.md` | Updated Run in Colab docs to mention YouTube JS support and the anonymous-Colab limitation without introducing cookies as a user-facing path |
+| `CHANGELOG.md` | This detailed maintainer entry |
+
+---
+
 ## v4.4.1 - Fix: Colab Accepts Python Module Commands
 **Date:** 22-07-2026
 

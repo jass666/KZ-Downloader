@@ -229,12 +229,12 @@ Don't want to install Python, FFmpeg, or anything else on a device? Click **☁�
 **What it does:**
 1. Copies the generated command to your clipboard.
 2. Opens a companion Google Colab notebook (`KZ_Colab_Downloader.ipynb`) in a new browser tab.
-3. Click the ▶ button on the notebook's cell — it reads the command straight from your clipboard automatically, installs yt-dlp/ffmpeg the first time in a session (skipped on later runs), then downloads. No pasting needed; if clipboard access is blocked, it falls back to asking you to paste manually.
+3. Click the ▶ button on the notebook's cell — it reads the command straight from your clipboard automatically, installs yt-dlp/FFmpeg plus YouTube JS support the first time in a session (skipped on later runs), then downloads. No pasting needed; if clipboard access is blocked, it falls back to asking you to paste manually.
 4. Each finished file pops up as its own browser download automatically, one at a time.
 
 **Best for:** Android (skip the Termux setup entirely), iOS, Chromebooks, or sharing a link with someone non-technical who just needs a file.
 
-**Doesn't work for:** LinkedIn or private/login-gated Instagram/Facebook content — Colab has no way to log in interactively the way a real browser session can. Use **Scanner → Playwright** for those instead.
+**Doesn't work for:** LinkedIn, private/login-gated Instagram/Facebook content, or public videos that YouTube blocks from anonymous Colab sessions. Use **Scanner → Playwright** or a normal local PC run for those instead.
 
 **Nothing is saved to Google Drive as output** — despite the notebook file itself living on Drive, downloaded videos only ever sit in a temporary folder inside the Colab session until they land in your browser's downloads.
 
