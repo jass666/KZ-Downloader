@@ -835,7 +835,6 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
         <button class="btn btn-accent" id="copy-btn" onclick="copyCmd()">📋 Copy</button>
         <button class="btn btn-ok" id="btn-download" onclick="downloadFile()">⬇ Download file</button>
         <button class="btn btn-warn" id="btn-launch-cmd" onclick="launchBat()">▶ Launch in CMD</button>
-        <button class="btn" id="btn-run-colab" onclick="runInColab()">☁️ Run in Colab</button>
         <button class="btn" id="btn-share" onclick="shareCmd()" style="display:none">📤 Share</button>
         <div class="action-sep"></div>
         <button class="btn btn-ghost" onclick="clearAll()" title="Remove all profiles from queue">🗑 Clear queue</button>
@@ -853,14 +852,10 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
         <strong>Terminal command</strong> is ready to paste in your terminal emulator. Install yt-dlp via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">python -m pip install yt-dlp</code> or the standalone binary. See <strong>Help → Setup Guide</strong>.
       </div>
       <div id="output-notice-android" class="notice notice-info" style="margin-top:.75rem;display:none">
-        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Help → Setup Guide → Android</strong>. Don't want to set up Termux at all? Use <strong>☁️ Run in Colab</strong> instead — no install needed.
+        <strong>📱 Android:</strong> recommended: use <a href="https://ytdlnis.org/download" target="_blank">YTDLnis</a>, a native Android yt-dlp downloader. Prefer commands? Tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong>. See <strong>Help → Setup Guide → Android</strong>.
       </div>
       <div id="output-notice-ios" class="notice notice-warn" style="margin-top:.75rem;display:none">
-        <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Easiest option: tap <strong>☁️ Run in Colab</strong> below — runs entirely in the browser, no install needed. Alternatively: (1) run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS; (2) use a self-hosted server and trigger downloads remotely via an SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
-      </div>
-
-      <div class="notice notice-info" id="colab-notice" style="margin-top:.75rem">
-        <strong>☁️ Run in Colab</strong> — no Python, FFmpeg, or install of any kind needed. Copies the command and opens a free Google Colab notebook that reads it straight from your clipboard — just click ▶ once, no pasting. Each finished file downloads straight to your browser. Best for one-off downloads on a phone, Chromebook, or someone else's PC. Some YouTube videos may be blocked by Colab's anonymous cloud session; LinkedIn and private/login-gated content still need <strong>Scanner → Playwright</strong> on a PC.
+        <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS, or trigger downloads on a self-hosted server via an SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
       </div>
 
       <div class="notice notice-info" id="list-mode-note" style="display:none;margin-top:.5rem">
@@ -1547,7 +1542,7 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
       <!-- Android / Termux -->
       <div class="os-panel" id="os-android">
         <div class="notice notice-info" style="margin-bottom:1rem">
-          yt-dlp runs natively on Android via <strong>Termux</strong> — a full Linux terminal emulator. Install it once, then use KZ Downloader to generate commands, copy them, and paste into Termux.
+          Recommended for Android: install <a href="https://ytdlnis.org/download" target="_blank">YTDLnis</a>, a native Android downloader built around yt-dlp. Use the Termux steps below only if you specifically want to run generated commands yourself.
         </div>
         <div class="setup-step">
           <div class="step-num">1</div>
@@ -1901,7 +1896,7 @@ const DEVICE_CONFIG = {
     showDownload: true,
     setupOS: 'android',
     bannerClass: 'info',
-    bannerText: '🤖 Android mode — use <strong>📋 Copy</strong> or <strong>📤 Share</strong> to send commands to <strong>Termux</strong>. See <strong>Help → Setup Guide → Android</strong> for one-time setup.',
+    bannerText: '🤖 Android mode — recommended: use <a href="https://ytdlnis.org/download" target="_blank">YTDLnis</a> for native Android downloads. Command-line users can still send commands to <strong>Termux</strong>.',
     iosWarning: false,
   },
   ios: {

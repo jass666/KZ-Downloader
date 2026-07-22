@@ -16,7 +16,7 @@ Open the app at [kzdownloader.pages.dev](https://kzdownloader.pages.dev/). Paste
 
 | Tab | Purpose |
 |---|---|
-| **Profiles** | Add any social profile or video URL. Platform detected automatically. Generated command appears inline — no tab switch needed. Includes a **☁️ Run in Colab** option for running commands with no local Python/FFmpeg install. |
+| **Profiles** | Add any social profile or video URL. Platform detected automatically. Generated command appears inline — no tab switch needed. |
 | **History** | Searchable log of every URL queued and every command generated. Export, import, and re-queue entries. |
 | **Presets** | Manage saved channel shortcuts. Add, edit, delete, export, and import presets. Seeded with built-in Tata presets on first load. |
 | **Scanner** | Scan any page for media. Quick Scan uses a CORS proxy for public pages; Playwright mode runs a local Python script for login-gated pages (LinkedIn, Instagram, Facebook); Live Bridge imports results directly from a running scanner over HTTP. |
@@ -147,7 +147,11 @@ playwright install chromium
 
 ---
 
-#### 🤖 Android (Termux)
+#### 🤖 Android
+
+Recommended: install [YTDLnis](https://ytdlnis.org/download), a native Android downloader built around yt-dlp.
+
+Prefer running generated commands yourself? Use Termux:
 
 1. Install [Termux from F-Droid](https://f-droid.org/packages/com.termux/) (not the Play Store version)
 2. Install dependencies:
@@ -188,7 +192,7 @@ Go to [kzdownloader.pages.dev](https://kzdownloader.pages.dev/) in Chrome, Firef
 
 1. **Profiles** → paste a URL or click a preset → **+ Add**
 2. **Settings** → set format, output folder, save location mode, filename template, flags
-3. The generated command appears inline in the **Profiles** tab — copy it, download the `.bat`, click **Launch in CMD**, or click **☁️ Run in Colab** to run it in the cloud with no install at all
+3. The generated command appears inline in the **Profiles** tab — copy it, download the `.bat`, or click **Launch in CMD**
 4. **History** → find any past URL or command, re-queue or export it
 
 ---
@@ -219,26 +223,6 @@ Download `kz_scanner.py` from the Scanner tab and save it anywhere on your machi
 **KZ Downloader folder** — fill this in once and the generated command will include `cd /d "path"` so it runs from any CMD window regardless of where it is opened.
 
 Alternatively, use **Live Bridge** mode: run `kz_scanner.py --serve` and the app polls the local HTTP server directly — no file step needed.
-
----
-
-## Run in Colab (No Install Needed)
-
-Don't want to install Python, FFmpeg, or anything else on a device? Click **☁️ Run in Colab** next to the generated command.
-
-**What it does:**
-1. Copies the generated command to your clipboard.
-2. Opens a companion Google Colab notebook (`KZ_Colab_Downloader.ipynb`) in a new browser tab.
-3. Click the ▶ button on the notebook's cell — it reads the command straight from your clipboard automatically, installs yt-dlp/FFmpeg plus YouTube JS support the first time in a session (skipped on later runs), then downloads. No pasting needed; if clipboard access is blocked, it falls back to asking you to paste manually.
-4. Each finished file pops up as its own browser download automatically, one at a time.
-
-**Best for:** Android (skip the Termux setup entirely), iOS, Chromebooks, or sharing a link with someone non-technical who just needs a file.
-
-**Doesn't work for:** LinkedIn, private/login-gated Instagram/Facebook content, or public videos that YouTube blocks from anonymous Colab sessions. Use **Scanner → Playwright** or a normal local PC run for those instead.
-
-**Nothing is saved to Google Drive as output** — despite the notebook file itself living on Drive, downloaded videos only ever sit in a temporary folder inside the Colab session until they land in your browser's downloads.
-
-**Hosting note:** the notebook is hosted on Google Drive (shared as *Anyone with the link → Viewer*) rather than deployed through Cloudflare Pages, since it isn't part of the static site. To update it, re-upload the new version to the same Drive file (keeping the same file ID) rather than running the deploy script — the link in `index.html` only needs to change if the file ID itself changes.
 
 ---
 
@@ -322,7 +306,7 @@ KZ-Downloader/
 ├── kz_scanner.py                 # Playwright scanner script (download from Scanner tab)
 ├── kz_scan.bat                   # Guided launcher for kz_scanner.py (Windows)
 ├── requirements.txt              # Python dependencies (yt-dlp, playwright)
-├── KZ_Colab_Downloader.ipynb     # Colab notebook for no-install cloud downloads (hosted on Google Drive, not deployed via Cloudflare Pages)
+├── KZ_Colab_Downloader.ipynb     # Hidden/legacy Colab notebook kept in the codebase
 ├── README.md                     # This file
 └── CHANGELOG.md                  # Full version history
 ```

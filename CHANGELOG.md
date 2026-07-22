@@ -8,6 +8,27 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v4.4.3 - Product: Hide Colab From Frontend, Recommend YTDLnis on Android
+**Date:** 22-07-2026
+
+### Changed
+
+**The public Colab entry point has been removed from the frontend.** The **Run in Colab** action button and the visible Colab promo notice are no longer shown on the Profiles screen, and device-specific copy no longer recommends Colab as the easiest mobile path.
+
+**Colab remains in the codebase as a hidden/legacy path.** The `runInColab()` function and `KZ_Colab_Downloader.ipynb` file were intentionally left in place so the implementation is preserved for future use or internal recovery without keeping it visible to normal users.
+
+**Android guidance now recommends YTDLnis first.** Android users are pointed to [YTDLnis](https://ytdlnis.org/download), a native Android downloader built around yt-dlp. The existing Termux workflow remains documented for users who prefer running generated commands manually.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | Removed the visible Run in Colab button and Colab notice; updated Android banner/output/setup copy to recommend YTDLnis; removed Colab from iOS output guidance |
+| `README.md` | Removed public Run in Colab documentation; updated Android setup to recommend YTDLnis first; marked the Colab notebook as hidden/legacy in the project tree |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v4.4.2 - Improvement: Colab Adds YouTube JS Support, Keeps No-Cookies UX
 **Date:** 22-07-2026
 
