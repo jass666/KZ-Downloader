@@ -4,7 +4,33 @@ All notable changes to **KZ Downloader** are documented here.
 
 Project created and maintained by **Jaswant Kanojia**.
 
-**Date:** 17-07-2026
+**Date:** 22-07-2026
+
+---
+
+## v4.3 — Feature: Run in Colab (No-Install Cloud Downloads)
+**Date:** 22-07-2026
+
+### Added
+
+**☁️ Run in Colab button** in the action row (Profiles tab), next to **▶ Launch in CMD** — copies the generated command to the clipboard and opens a companion Google Colab notebook (`KZ_Colab_Downloader.ipynb`) in a new tab. The notebook checks for yt-dlp/ffmpeg and installs whichever is missing (first run in a session only, ~20s; skipped on later runs), executes the pasted command, and streams each finished file straight to the browser's own download queue one at a time — no Python, FFmpeg, or any local install required on any device.
+
+Built for devices where local Python setup isn't practical: Android without Termux, iOS, Chromebooks, or handing a link to a non-technical coworker who just needs a file. The notebook strips whatever `-o`/`--output` value is already in the pasted command — regardless of which device generated it (e.g. a Windows `D:/KZ Downloads/...` path) — and rewrites it to a safe path inside the Colab session automatically, so any command pasted from any device just works.
+
+**Hosting:** the notebook is hosted on the user's own Google Drive (shared as "Anyone with the link" → Viewer) and opened via `https://colab.research.google.com/drive/FILE_ID`, rather than being pushed through the GitHub/Cloudflare Pages deploy pipeline — it isn't part of the static site itself. Updating the notebook means re-uploading the new version to the same Drive file (keeping its file ID, and therefore the link, unchanged), not running the deploy script.
+
+**No Google Drive dependency for downloads** — despite being Drive-hosted as a notebook file, the notebook itself never touches the user's Drive for output. Downloaded files live only in a temporary folder inside the Colab session until they land in the browser's downloads, then they're gone from Colab.
+
+**Notices updated** — the Android and iOS output notices now mention Run in Colab as the no-install alternative to Termux/SSH. A new universal notice under the action row explains what the button does and flags its one limitation: it only works for public content, since Colab has no way to interactively log into LinkedIn or private IG/FB the way the local Playwright scanner does.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `index.html` | New `btn-run-colab` button + `runInColab()` handler; `COLAB_NOTEBOOK_URL` constant added (Drive-hosted link); new `colab-notice` div; Android/iOS output notices updated to mention the option; logo version bumped to `4.3` |
+| `KZ_Colab_Downloader.ipynb` | New file — single-cell Colab notebook that auto-installs yt-dlp/ffmpeg if missing, executes pasted command(s), and downloads each finished file to the browser individually |
+| `README.md` | New "Run in Colab" section; Quick Start step 3 and File Structure updated; version bumped to `4.3` |
+| `CHANGELOG.md` | This entry |
 
 ---
 

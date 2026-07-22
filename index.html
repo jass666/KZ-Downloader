@@ -835,6 +835,7 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
         <button class="btn btn-accent" id="copy-btn" onclick="copyCmd()">📋 Copy</button>
         <button class="btn btn-ok" id="btn-download" onclick="downloadFile()">⬇ Download file</button>
         <button class="btn btn-warn" id="btn-launch-cmd" onclick="launchBat()">▶ Launch in CMD</button>
+        <button class="btn" id="btn-run-colab" onclick="runInColab()">☁️ Run in Colab</button>
         <button class="btn" id="btn-share" onclick="shareCmd()" style="display:none">📤 Share</button>
         <div class="action-sep"></div>
         <button class="btn btn-ghost" onclick="clearAll()" title="Remove all profiles from queue">🗑 Clear queue</button>
@@ -852,10 +853,14 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
         <strong>Terminal command</strong> is ready to paste in your terminal emulator. Install yt-dlp via <code style="background:rgba(0,0,0,.1);padding:1px 5px;border-radius:3px;font-size:11px">python -m pip install yt-dlp</code> or the standalone binary. See <strong>Help → Setup Guide</strong>.
       </div>
       <div id="output-notice-android" class="notice notice-info" style="margin-top:.75rem;display:none">
-        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Help → Setup Guide → Android</strong>.
+        <strong>📱 Android:</strong> tap <strong>📋 Copy</strong> or <strong>📤 Share</strong>, then paste in <strong>Termux</strong> and press Enter. Make sure yt-dlp is installed in Termux first — see <strong>Help → Setup Guide → Android</strong>. Don't want to set up Termux at all? Use <strong>☁️ Run in Colab</strong> instead — no install needed.
       </div>
       <div id="output-notice-ios" class="notice notice-warn" style="margin-top:.75rem;display:none">
-        <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Options: (1) run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS; (2) use a self-hosted server and trigger downloads remotely. Copy the command and paste it into your SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
+        <strong>📱 iOS:</strong> yt-dlp cannot run natively on iOS. Easiest option: tap <strong>☁️ Run in Colab</strong> below — runs entirely in the browser, no install needed. Alternatively: (1) run yt-dlp on a Mac/Linux machine and use <strong>SSH</strong> from iOS; (2) use a self-hosted server and trigger downloads remotely via an SSH client (e.g. <a href="https://apps.apple.com/app/termius-ssh-client/id549039908" target="_blank">Termius</a>).
+      </div>
+
+      <div class="notice notice-info" id="colab-notice" style="margin-top:.75rem">
+        <strong>☁️ Run in Colab</strong> — no Python, FFmpeg, or install of any kind needed. Copies the command and opens a free Google Colab notebook that runs it in the cloud; each finished file downloads straight to your browser. Best for one-off downloads on a phone, Chromebook, or someone else's PC. Doesn't work for LinkedIn or private/login-gated content — use <strong>Scanner → Playwright</strong> for those.
       </div>
 
       <div class="notice notice-info" id="list-mode-note" style="display:none;margin-top:.5rem">
@@ -2527,6 +2532,20 @@ function shareCmd(){
   } else {
     safeCopy(text, ()=>{ showToast('✓ Copied to clipboard'); });
   }
+}
+
+/* ─── RUN IN COLAB (no-install cloud runner) ──────────────── */
+// Hosted on Google Drive (shared as "Anyone with the link" → Viewer), not deployed via Cloudflare Pages.
+// To update: re-upload the new notebook version to this same Drive file so the ID/link stay unchanged.
+const COLAB_NOTEBOOK_URL = 'https://colab.research.google.com/drive/1YE3zS5Eg6aCySwwKrMjfcyDu74D7cQRR';
+function runInColab(){
+  const text = document.getElementById('term-body').textContent;
+  if(!text||text.includes('Add profiles')) return;
+  logCurrentToHistory();
+  safeCopy(text, ()=>{
+    showToast('✓ Command copied — paste it into the notebook cell that just opened');
+  });
+  window.open(COLAB_NOTEBOOK_URL, '_blank', 'noopener');
 }
 
 /* ─── DOWNLOAD FILE ───────────────────────────────────────── */
