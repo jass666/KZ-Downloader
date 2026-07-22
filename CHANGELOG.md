@@ -8,6 +8,24 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v4.4.1 - Fix: Colab Accepts Python Module Commands
+**Date:** 22-07-2026
+
+### Fixed
+
+**`KZ_Colab_Downloader.ipynb` now correctly handles commands that start with `python -m yt_dlp` or `python3 -m yt_dlp`.** The v4.4 clipboard flow could read the site's generated command successfully, but the notebook only stripped a leading `yt-dlp` before prepending its own Colab-safe `yt-dlp` runner. That produced malformed commands like `yt-dlp python -m yt_dlp ...`, which finished without sending any file back to the browser.
+
+The notebook now normalizes all supported command prefixes (`yt-dlp`, `python -m yt_dlp`, and `python3 -m yt_dlp`) before rewriting the output path for Colab. It also reports the yt-dlp exit code and shows a clear warning when no new file was created, so future failures are easier to understand from the Colab output.
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `KZ_Colab_Downloader.ipynb` | Normalize `yt-dlp`, `python -m yt_dlp`, and `python3 -m yt_dlp` command prefixes; warn on non-zero yt-dlp exit codes; warn when no new files are available for browser download |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v4.4 — Improvement: Run in Colab Now Auto-Reads the Command (No Paste Step)
 **Date:** 22-07-2026
 
