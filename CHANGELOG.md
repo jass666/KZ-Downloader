@@ -8,6 +8,29 @@ Project created and maintained by **Jaswant Kanojia**.
 
 ---
 
+## v4.4 — Improvement: Run in Colab Now Auto-Reads the Command (No Paste Step)
+**Date:** 22-07-2026
+
+### Changed
+
+**`KZ_Colab_Downloader.ipynb` no longer requires pasting the command into a form field.** The notebook's single cell now calls `google.colab.output.eval_js('navigator.clipboard.readText()')` on run and uses whatever was just copied by the site's **☁️ Run in Colab** button directly — reducing the flow to: click the button on the site → click ▶ once in the notebook → downloads start.
+
+If clipboard reading fails or returns something that doesn't look like a yt-dlp command (browser blocked it, permission not yet granted, or nothing was copied), the cell falls back to an `input()` prompt asking for a manual paste, so it degrades gracefully rather than failing silently.
+
+**Important limitation, not a bug:** Colab never auto-executes any cell on notebook open, by Google's own design — this is a deliberate anti-abuse safeguard that applies to every Colab notebook regardless of host or author. The single ▶ click in Colab can't be removed; this change only removes the paste step that used to follow it.
+
+Site-side wording updated to match: the toast after clicking **☁️ Run in Colab** and the notice text under the action row both now describe "click ▶, no pasting" instead of "paste it into the cell."
+
+### Files Changed
+
+| File | Change |
+|---|---|
+| `KZ_Colab_Downloader.ipynb` | Replaced the `#@param` paste field with automatic clipboard reading via `google.colab.output.eval_js`; added fallback to manual `input()` paste prompt if clipboard read fails or looks wrong; intro/notes markdown updated to describe the new flow |
+| `index.html` | `runInColab()` toast text and `colab-notice` copy updated to describe the no-paste flow; logo version bumped to `4.4` |
+| `CHANGELOG.md` | This entry |
+
+---
+
 ## v4.3 — Feature: Run in Colab (No-Install Cloud Downloads)
 **Date:** 22-07-2026
 

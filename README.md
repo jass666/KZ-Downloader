@@ -6,7 +6,7 @@ A browser-based GUI for generating [yt-dlp](https://github.com/yt-dlp/yt-dlp) co
 
 Project created and maintained by **Jaswant Kanojia**.
 
-**Version:** v4.3 · **Date:** 22-07-2026
+**Version:** v4.4 · **Date:** 22-07-2026
 
 ---
 
@@ -229,7 +229,7 @@ Don't want to install Python, FFmpeg, or anything else on a device? Click **☁�
 **What it does:**
 1. Copies the generated command to your clipboard.
 2. Opens a companion Google Colab notebook (`KZ_Colab_Downloader.ipynb`) in a new browser tab.
-3. Paste the command into the notebook's single input cell and run it — it installs yt-dlp/ffmpeg automatically the first time in a session (skipped on later runs), then downloads.
+3. Click the ▶ button on the notebook's cell — it reads the command straight from your clipboard automatically, installs yt-dlp/ffmpeg the first time in a session (skipped on later runs), then downloads. No pasting needed; if clipboard access is blocked, it falls back to asking you to paste manually.
 4. Each finished file pops up as its own browser download automatically, one at a time.
 
 **Best for:** Android (skip the Termux setup entirely), iOS, Chromebooks, or sharing a link with someone non-technical who just needs a file.

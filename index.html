@@ -860,7 +860,7 @@ select:focus,input[type=text]:focus,.profile-row input:focus{
       </div>
 
       <div class="notice notice-info" id="colab-notice" style="margin-top:.75rem">
-        <strong>☁️ Run in Colab</strong> — no Python, FFmpeg, or install of any kind needed. Copies the command and opens a free Google Colab notebook that runs it in the cloud; each finished file downloads straight to your browser. Best for one-off downloads on a phone, Chromebook, or someone else's PC. Doesn't work for LinkedIn or private/login-gated content — use <strong>Scanner → Playwright</strong> for those.
+        <strong>☁️ Run in Colab</strong> — no Python, FFmpeg, or install of any kind needed. Copies the command and opens a free Google Colab notebook that reads it straight from your clipboard — just click ▶ once, no pasting. Each finished file downloads straight to your browser. Best for one-off downloads on a phone, Chromebook, or someone else's PC. Doesn't work for LinkedIn or private/login-gated content — use <strong>Scanner → Playwright</strong> for those.
       </div>
 
       <div class="notice notice-info" id="list-mode-note" style="display:none;margin-top:.5rem">
@@ -2543,7 +2543,7 @@ function runInColab(){
   if(!text||text.includes('Add profiles')) return;
   logCurrentToHistory();
   safeCopy(text, ()=>{
-    showToast('✓ Command copied — paste it into the notebook cell that just opened');
+    showToast('✓ Copied — click ▶ in the notebook that just opened, it\'ll grab this automatically');
   });
   window.open(COLAB_NOTEBOOK_URL, '_blank', 'noopener');
 }
